@@ -3,10 +3,8 @@ import Customer from "../database/models/models.customer"
 import DeliveryGuy from "../database/models/models.deliveryGuy"
 import Vendor from "../database/models/models.vendor"
 import { connectToDatabase } from "../database"
-import bcrypt from "bcrypt"
-import jwt from "jsonwebtoken"
+import { logIn } from "../utils/services.utils"
 
-const jwtSecret = process.env.JWT_SECRET
 
 export const registerUser = async ({
     name, email, phoneNumber, password, verificationCode, role
@@ -44,31 +42,21 @@ export const registerUser = async ({
     }
 }
 
-
 export const loginUser = async ({ role, email, password }: loginUserParams) => {
     try {
         await connectToDatabase()
         switch(role) {
             case "Customer":
-                const customer = await Customer.findOne({ email })
+                const customer = await logIn(role, Customer, email, password)
+                return customer
 
-                if (!customer) {
-                    return JSON.stringify({ msg: "customer not found!"})
-                }
+            case "DeliveryGuy":
+                const delivery_guy = await logIn(role, DeliveryGuy, email, password)
+                return delivery_guy
 
-                const passwordMatch = await bcrypt.compare(password, customer.password)
-
-                if (!passwordMatch) {
-                    return JSON.stringify({ msg: "Auth failed" })
-                }
-
-                const token = jwt.sign({ userId: customer._id, email: customer.email }, jwtSecret, { expiresIn: "1h"})
-
-                return JSON.stringify({
-                    name: customer.name,
-                    email: customer.email,
-                    token: token
-                })
+            case "Vendor":
+                const vendor = await logIn(role, Vendor, email, password)
+                return vendor
         }
     } catch (error) {
         throw error

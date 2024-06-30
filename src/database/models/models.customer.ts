@@ -7,6 +7,8 @@ const CustomerSchema = new Schema({
     username: { type: String, required: false },
     location: { type: String, required: false },
     phoneNumber: { type: String, required: true },
+    verificationCode: { type: String, required: false },
+    verified: { type: Boolean, required: false, default: false },
     orderId: [{ type: Types.ObjectId, ref: "Order", required: false }]
 }, { timestamps: true })
 

@@ -6,9 +6,10 @@ const VendorSchema = new Schema({
     phoneNumber: { type: String, required: true },
     storeEmail: { type: String, required: true },
     password: { type: String, required: true },
-    storePhoto: { type: String, required: true },
-    storeAddress: { type: String, required: true },
-    storeTiming: { type: String, required: true },
+    storePhoto: { type: String, required: false },
+    storeAddress: { type: String, required: false },
+    storeTiming: { type: String, required: false },
+    verificationCode: { type: String, required: true },
     products: [
         {
             productName: String,

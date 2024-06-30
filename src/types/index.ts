@@ -6,3 +6,9 @@ export type UserData = {
     password: string;
     verificationCode: string;
 }
+
+export type loginUserParams = {
+    role: string;
+    email: string;
+    password: string;
+}

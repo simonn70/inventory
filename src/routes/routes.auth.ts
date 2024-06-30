@@ -4,8 +4,8 @@ import { login, logout, register, verifyAccount } from "../controllers/controlle
 const router = Router()
 
 router.post("/register", register)
-router.post("/verify-account", verifyAccount)
 router.post("/login", login)
+router.post("/verify-account", verifyAccount)
 router.post("/logout", logout)
 
 export default router

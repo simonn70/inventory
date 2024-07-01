@@ -3,6 +3,8 @@ import { generateVerificationCode, passwordsMatch } from "../utils/validation.ut
 import { loginUser, registerUser } from "../services/services.auth"
 import bcrypt from "bcrypt"
 import nodemailer from "nodemailer";
+import updateUserByRole, { getUserByRole } from "../utils/services.utils";
+import { connectToDatabase } from "../database";
 
 export const register = async (request: Request, response: Response) => {
     let { role, name, email, phoneNumber, password, repeatPassword } = request.body
@@ -82,3 +84,50 @@ export const logout = async (request: Request, response: Response) => {
         throw error
     }
 }
+
+
+
+
+
+export const getProfile = async (req:any, res:Response) => {
+   
+    try {
+        const user  = req.user;  // Assuming you have a middleware that sets req.user and req.role
+        const  role = req.role;
+        console.log(user,role);
+        
+
+      const profile = await getUserByRole(user?._id,role)
+      if (!profile) {
+        return res.status(404).json({ message: 'Customer not found' });
+      }
+  
+      res.status(200).json(profile);
+    } catch (error) {
+      console.error('Error fetching customer profile:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
+  export const updateProfile = async (req: any, res: Response) => {
+    try {
+      const { user } = req.user;  // Assuming you have a middleware that sets req.user and req.role
+      const { role} = req.role;
+      const updatedData = req.body;
+  
+      const updatedProfile = await updateUserByRole(user._id, role, updatedData);
+  
+      if (!updatedProfile) {
+        return res.status(404).json({ message: 'Profile not found' });
+      }
+  
+      res.status(200).json(updatedProfile);
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+  };
+  
+  
+  
+  

@@ -62,3 +62,6 @@ export const loginUser = async ({ role, email, password }: loginUserParams) => {
         throw error
     }
 }
+
+//get profile details  for user roles
+// check role of each user and based on that fetch their profile details

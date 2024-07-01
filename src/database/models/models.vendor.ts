@@ -1,5 +1,4 @@
 import { Schema, Types, model, models } from "mongoose";
-
 const VendorSchema = new Schema({
     storeName: { type: String, required: true },
     category: [String],
@@ -8,16 +7,12 @@ const VendorSchema = new Schema({
     password: { type: String, required: true },
     storePhoto: { type: String, required: false },
     storeAddress: { type: String, required: false },
-    storeTiming: { type: String, required: false },
+    openingTime: { type: String, required: true },
+    closingTime: { type: String, required: true },
     verificationCode: { type: String, required: true },
-    products: [
-        {
-            productName: String,
-            price: String,
-        }
-    ],
+    products: [{ type: Types.ObjectId, ref: "Product" }],
     orderId: [{ type: Types.ObjectId, ref: "Order" }]
-}, { timestamps: true })
+}, { timestamps: true });
 
 const Vendor = models.Vendor || model("Vendor", VendorSchema)
 export default Vendor

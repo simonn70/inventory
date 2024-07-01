@@ -2,6 +2,8 @@ import express from "express"
 import cors from "cors"
 import "dotenv/config"
 import authRoutes from "./routes/routes.auth"
+import vendorRoutes from './routes/route.vendor'
+import productRoutes from './routes/route.product'
 
 const PORT = process.env.PORT
 
@@ -17,6 +19,8 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 app.use("/auth", authRoutes)
+app.use("/vendor", vendorRoutes)
+app.use("/product", productRoutes)
 
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`)

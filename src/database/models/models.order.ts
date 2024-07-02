@@ -6,8 +6,7 @@ const OrderSchema = new Schema({
     services: [{ type: String, required: true }],
     deliveryGuy: { type: Types.ObjectId, ref: "DeliveryGuy"},
     invoice: { type: String, required: true },
-    picked: { type: Boolean },
-    delivered: { type: Boolean }
+    status: { type: String, required: true },
 }, { timestamps: true } )
 
 const Order = models.Order || model("Order", OrderSchema)

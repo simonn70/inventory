@@ -9,7 +9,7 @@ const jwtSecret = process.env.JWT_SECRET
 
 export const logIn = async (role: string, model: any, email: string, password: string) => {
     try {
-          await connectToDatabase()
+        await connectToDatabase()
         let genericUser: any
 
         if (role == "Vendor") {
@@ -46,14 +46,14 @@ export const logIn = async (role: string, model: any, email: string, password: s
         }
 
     } catch (error) {
-        
+        throw error
     }
 }
 
 
  export const getUserByRole = async (id:String, role:String) => {
   let user:any;
-await connectToDatabase()
+  await connectToDatabase()
   switch (role) {
     case 'Customer':
       user = await Customer.findById(id).select('-password');
@@ -70,7 +70,6 @@ await connectToDatabase()
 
   return user;
 };
-
 
 
 const updateUserByRole = async (id:String, role:String, updatedData:any) => {
@@ -94,4 +93,25 @@ const updateUserByRole = async (id:String, role:String, updatedData:any) => {
   return updatedUser;
 };
 
-export default updateUserByRole;
+export const setUserLocation = async (model: any, longitude: string, latitude: string, userId: string) => {
+  try {
+    await connectToDatabase()
+    const genericUser = await model.findById(userId)
+
+    if (!genericUser) {
+      return JSON.stringify({ msg: "could not find user"})
+    }
+
+    genericUser.location = {
+      type: "Point",
+      coordinates: [longitude, latitude]
+    }
+
+    await genericUser.save()
+    return JSON.stringify({ msg: "location updated"})
+  } catch (error) {
+    throw error
+  }
+}
+
+export default updateUserByRole

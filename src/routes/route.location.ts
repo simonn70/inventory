@@ -1,11 +1,10 @@
 import { Router } from "express"
 import {
-    setUserCurrentLocation, setVendorLocation
+    setLocation
 } from "../controllers/controllers.location"
 
 const router = Router()
 
-router.post("/set-customer", setUserCurrentLocation)
-router.post("/set-vendor", setVendorLocation)
+router.post("/set", setLocation)
 
 export default router

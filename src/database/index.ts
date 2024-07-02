@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 import "dotenv/config"
 
-const MONGODB_URI = process.env.MONGODB_URI
+const MONGODB_URI = "mongodb+srv://bismarkb609:rzafyY1KjMzMOZg8@cluster0.j1uhnti.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 declare global {
     var mongoose: {
@@ -11,7 +11,7 @@ declare global {
 }
 
 if (!MONGODB_URI) {
-    throw new Error("MONGO_DB URI is missing")
+    throw new Error("MONGODB URI is missing")
 }
   
 if (!global.mongoose) {

@@ -10,8 +10,8 @@ import { connectToDatabase } from '../database';
 // Create a new product
 export const createProduct = async (req: Request, res: Response) => {
     const { storeId, productName, price, description } = req.body;
- await connectToDatabase()
     try {
+        await connectToDatabase()
         const vendor = await Vendor.findById(storeId);
         if (!vendor) {
             return res.status(404).json({ message: 'Vendor not found' });

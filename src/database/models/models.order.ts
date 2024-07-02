@@ -8,7 +8,7 @@ const OrderSchema = new Schema({
     invoice: { type: String, required: true },
     picked: { type: Boolean },
     delivered: { type: Boolean }
-}, { timestamps: true })
+}, { timestamps: true } )
 
 const Order = models.Order || model("Order", OrderSchema)
 export default Order

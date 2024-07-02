@@ -7,11 +7,11 @@ import { connectToDatabase } from '../database';
 
 
 
-// Create a new product
+
 export const createProduct = async (req: Request, res: Response) => {
     const { storeId, productName, price, description } = req.body;
+ await connectToDatabase()
     try {
-        await connectToDatabase()
         const vendor = await Vendor.findById(storeId);
         if (!vendor) {
             return res.status(404).json({ message: 'Vendor not found' });
@@ -38,7 +38,7 @@ export const createProduct = async (req: Request, res: Response) => {
 };
 
 
-// Get a product by ID
+
 export const getProductById = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -53,7 +53,7 @@ export const getProductById = async (req: Request, res: Response) => {
     }
 };
 
-// Update a product by ID
+
 export const updateProductById = async (req: Request, res: Response) => {
     const { id } = req.params;
     const updatedData = req.body;
@@ -69,7 +69,7 @@ export const updateProductById = async (req: Request, res: Response) => {
     }
 };
 
-// Delete a product by ID
+
 export const deleteProductById = async (req: Request, res: Response) => {
     const { id } = req.params;
     try {
@@ -85,7 +85,7 @@ export const deleteProductById = async (req: Request, res: Response) => {
     }
 };
 
-// Get products by store ID
+
 export const getProductByStoreId = async (req: Request, res: Response) => {
     const { storeId } = req.params;
 

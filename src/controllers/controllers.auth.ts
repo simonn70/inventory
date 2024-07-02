@@ -111,8 +111,8 @@ export const getProfile = async (req:any, res:Response) => {
   
   export const updateProfile = async (req: any, res: Response) => {
     try {
-      const { user } = req.user;  // Assuming you have a middleware that sets req.user and req.role
-      const { role} = req.role;
+      const  user  = req.user;  // Assuming you have a middleware that sets req.user and req.role
+      const role = req.role;
       const updatedData = req.body;
   
       const updatedProfile = await updateUserByRole(user._id, role, updatedData);

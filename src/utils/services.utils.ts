@@ -1,9 +1,9 @@
 import bcrypt from "bcrypt"
 import jwt from "jsonwebtoken"
 import Customer from "../database/models/models.customer"
-import Vendor from "../database/models/models.vendor"
-import DeliveryGuy from "../database/models/models.deliveryGuy"
+
 import { connectToDatabase } from "../database"
+import User from "../database/models/models.customer"
 
 const jwtSecret = process.env.JWT_SECRET
 
@@ -56,14 +56,11 @@ export const logIn = async (role: string, model: any, email: string, password: s
   await connectToDatabase()
   switch (role) {
     case 'Customer':
-      user = await Customer.findById(id).select('-password');
+      user = await User.findById(id).select('-password');
       break;
     case 'Vendor':
-      user = await Vendor.findById(id).select('-password');
-      break;
-    case 'DeliveryPerson':
-      user = await DeliveryGuy.findById(id).select('-password');
-      break;
+      user = await User.findById(id).select('-password');
+    
     default:
       throw new Error('Invalid user role');
   }
@@ -81,11 +78,8 @@ const updateUserByRole = async (id:String, role:String, updatedData:any) => {
       updatedUser = await Customer.findByIdAndUpdate(id, updatedData, options).select('-password');
       break;
     case 'Vendor':
-      updatedUser = await Vendor.findByIdAndUpdate(id, updatedData, options).select('-password');
-      break;
-    case 'deliveryPerson':
-      updatedUser = await DeliveryGuy.findByIdAndUpdate(id, updatedData, options).select('-password');
-      break;
+      updatedUser = await User.findByIdAndUpdate(id, updatedData, options).select('-password');
+   
     default:
       throw new Error('Invalid user role');
   }

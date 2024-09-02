@@ -1,13 +1,31 @@
 import { Schema, Types, model, models } from "mongoose";
 
-const OrderSchema = new Schema({
-    vendorId: { type: Types.ObjectId, ref: "Vendor"},
-    customerId: { type: Types.ObjectId, ref: "Customer" },
-    services: [{ type: Schema.Types.ObjectId, ref: 'Product', required: true }],
-    deliveryGuy: { type: Types.ObjectId, ref: "DeliveryGuy"},
-    invoice: { type: String, required: false },
-    status: { type: String, required: false },
-}, { timestamps: true } )
 
-const Order = models.Order || model("Order", OrderSchema)
+const orderSchema = new Schema({
+    customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    partner: { type: Schema.Types.ObjectId, ref: 'User' },
+    products: [{
+        product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
+        quantity: { type: Number, required: true }
+    }],
+    totalAmount: { type: Number, required: true },
+    status: { 
+        type: String, 
+        enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'],
+        default: 'pending'
+    },
+    paymentStatus: { 
+        type: String, 
+        enum: ['unpaid', 'paid', 'failed'],
+        default: 'unpaid'
+    },
+    // payment: { type: Schema.Types.ObjectId, ref: 'Payment' },
+    location: { type: Schema.Types.ObjectId, ref: 'Location' },
+    deliveryTime: { type: Date },
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+});
+
+
+const Order = models.Order || model("Order", orderSchema)
 export default Order

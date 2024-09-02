@@ -1,34 +1,37 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
 import { connectToDatabase } from '../database';
-import Customer from '../database/models/models.customer';
-import Vendor from '../database/models/models.vendor';
-import { setUserLocation } from '../utils/services.utils';
-import DeliveryGuy from '../database/models/models.deliveryGuy';
+import Location from '../database/models/models.location';
 
-
-export const setLocation = async (request: Request, response: Response) => {
-    const { longitude, latitude, userId, role } = request.body
-
+export const setLocation = async (request: any, response: Response) => {
+    const { longitude, latitude } = request.body;
+    const user = request.user; // Assuming this is set by middleware (e.g., authentication middleware)
+ console.log(user);
+ 
     try {
-        await connectToDatabase()
+        await connectToDatabase();
 
-        let user: any 
+        // Reverse geocode to get the location name
+        const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+        const geocodeResponse = await axios.get(geocodeUrl);
+        const locationName = geocodeResponse.data.name;
+        console.log(geocodeResponse.data);
+        
 
-        switch(role) {
-            case "Customer":
-             user = await setUserLocation(Customer, longitude, latitude, userId)
-             break
-            case "Vendor":
-             user = await setUserLocation(Vendor, longitude, latitude, userId)
-             break
-            case "DeliveryGuy":
-             user = await setUserLocation(DeliveryGuy, longitude, latitude, userId)
-             break;
-            default:
-             throw new Error("Invalid user role")
-        }
-        return response.status(200).send({ msg: "location updated" }) 
+        // Create a new location instance
+        const newLocation = new Location({
+            longitude,
+            latitude,
+            user: user._id, 
+            name:locationName, 
+        });
+
+        // Save the location to the database
+        await newLocation.save();
+
+        return response.status(200).send({ msg: "Location saved successfully", location: newLocation });
     } catch (error) {
-        return response.status(500).send({ msg: "internal server error", error })
+        console.error("Error saving location:", error);
+        return response.status(500).send({ msg: "Internal server error", error });
     }
-}
+};

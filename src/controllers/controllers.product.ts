@@ -1,103 +1,116 @@
-
 import { Request, Response } from 'express';
-import Product from '../database/models/models.product';
-import Vendor from '../database/models/models.vendor';
+
 import { connectToDatabase } from '../database';
+import Product from '../database/models/models.product';
 
+// Create a new product
+export const createProduct = async (req: any, res: Response) => {
+    const { name, description, service, productType, price, imageUrl } =await req.body;
+     // Assuming this is set by middleware
 
-
-
-
-export const createProduct = async (req: Request, res: Response) => {
-    const { storeId, productName, price, description } = req.body;
- await connectToDatabase()
     try {
-        const vendor = await Vendor.findById(storeId);
-        if (!vendor) {
-            return res.status(404).json({ message: 'Vendor not found' });
-        }
+        await connectToDatabase();
 
-        const product = new Product({
-            productName,
-            price,
+        const newProduct = new Product({
+            name,
             description,
-            storeId
+            service,
+            productType,
+            price,
+            imageUrl,
+          
         });
 
-        await product.save();
+        const savedProduct = await newProduct.save();
 
-        await Vendor.findByIdAndUpdate(storeId, {
-            $push: { products: product._id }
-        });
-
-        res.status(201).json(product);
+        return res.status(201).send({ msg: 'Product created successfully', product: savedProduct });
     } catch (error) {
-        console.error('Error creating product:', error);
-        res.status(400).json({ message: error.message });
+        return res.status(500).send({ msg: 'Error creating product', error });
     }
 };
 
+// Fetch all products
+export const getAllProducts = async (req: Request, res: Response) => {
+    try {
+        await connectToDatabase();
 
+        const products = await Product.find().populate('service');
 
+        return res.status(200).send(products);
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error fetching products', error });
+    }
+};
+
+// Fetch products by service
+export const getProductsByService = async (req: Request, res: Response) => {
+    const { serviceId } = req.params;
+
+    try {
+        await connectToDatabase();
+
+        const products = await Product.find({ service: serviceId }).populate('service').populate('createdBy');
+
+        return res.status(200).send(products);
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error fetching products by service', error });
+    }
+};
+
+// Fetch product by ID
 export const getProductById = async (req: Request, res: Response) => {
-    const { id } = req.params;
+    const { productId } = req.params;
+
     try {
-        const product = await Product.findById(id);
+        await connectToDatabase();
+
+        const product = await Product.findById(productId).populate('service').populate('createdBy');
+
         if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
+            return res.status(404).send({ msg: 'Product not found' });
         }
-        res.status(200).json(product);
+
+        return res.status(200).send(product);
     } catch (error) {
-        console.error('Error fetching product:', error);
-        res.status(500).json({ message: 'Server error' });
+        return res.status(500).send({ msg: 'Error fetching product by ID', error });
     }
 };
 
-
-export const updateProductById = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    const updatedData = req.body;
-    try {
-        const product = await Product.findByIdAndUpdate(id, updatedData, { new: true, runValidators: true });
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-        res.status(200).json(product);
-    } catch (error) {
-        console.error('Error updating product:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-
-export const deleteProductById = async (req: Request, res: Response) => {
-    const { id } = req.params;
-    try {
-        const product = await Product.findByIdAndDelete(id);
-        if (!product) {
-            return res.status(404).json({ message: 'Product not found' });
-        }
-        await Vendor.findByIdAndUpdate(product.storeId, { $pull: { products: product._id } });
-        res.status(200).json({ message: 'Product deleted successfully' });
-    } catch (error) {
-        console.error('Error deleting product:', error);
-        res.status(500).json({ message: 'Server error' });
-    }
-};
-
-
-export const getProductByStoreId = async (req: Request, res: Response) => {
-    const { storeId } = req.params;
+// Update product
+export const updateProduct = async (req: Request, res: Response) => {
+    const { productId } = req.params;
+    const updates = req.body;
 
     try {
-        const products = await Product.find({ storeId });
-        if (products.length === 0) {
-            return res.status(404).json({ message: 'No products found for this store' });
+        await connectToDatabase();
+
+        const updatedProduct = await Product.findByIdAndUpdate(productId, updates, { new: true }).populate('service').populate('createdBy');
+
+        if (!updatedProduct) {
+            return res.status(404).send({ msg: 'Product not found' });
         }
-        res.status(200).json(products);
+
+        return res.status(200).send({ msg: 'Product updated successfully', product: updatedProduct });
     } catch (error) {
-        console.error('Error fetching products by store ID:', error);
-        res.status(500).json({ message: 'Server error' });
+        return res.status(500).send({ msg: 'Error updating product', error });
     }
 };
 
+// Delete product
+export const deleteProduct = async (req: Request, res: Response) => {
+    const { productId } = req.params;
+
+    try {
+        await connectToDatabase();
+
+        const deletedProduct = await Product.findByIdAndDelete(productId);
+
+        if (!deletedProduct) {
+            return res.status(404).send({ msg: 'Product not found' });
+        }
+
+        return res.status(200).send({ msg: 'Product deleted successfully' });
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error deleting product', error });
+    }
+};

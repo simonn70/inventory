@@ -1,14 +1,31 @@
-import { Router } from "express";
-import { createProduct, deleteProductById, getProductByStoreId, updateProductById } from "../controllers/controllers.product";
+import express from 'express';
+import {
+    createProduct,
+    getAllProducts,
+    getProductsByService,
+    getProductById,
+    updateProduct,
+    deleteProduct
+} from '../controllers/controllers.product';
 
+const router = express.Router();
 
-const router = Router()
+// Route to create a new product
+router.post('/create', createProduct);
 
-router.post("/create",createProduct )
-router.get("/:storeId", getProductByStoreId)
-router.put("/update/:id", updateProductById)
-router.delete("/delete/:id", deleteProductById)
+// Route to get all products
+router.get('/', getAllProducts);
 
+// Route to get products by service ID
+router.get('/services/:serviceId', getProductsByService);
 
+// Route to get a single product by ID
+router.get('/:productId', getProductById);
 
-export default router
+// Route to update a product by ID
+router.put('/:productId', updateProduct);
+
+// Route to delete a product by ID
+router.delete('/:productId', deleteProduct);
+
+export default router;

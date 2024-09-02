@@ -1,17 +1,48 @@
 import { Schema, Types, model, models } from "mongoose";
 
-const CustomerSchema = new Schema({
-    name: { type: String, required: true },
-    email: { type: String, required: true },
-    password: { type: String, required: true },
-    username: { type: String, required: false },
-    location:  { type: String, required: false },
-    phoneNumber: { type: String, required: true },
-    verificationCode: { type: String, required: false },
-    verified: { type: Boolean, required: false, default: false },
-    orderId: [{ type: Types.ObjectId, ref: "Order", required: false }]
-}, { timestamps: true })
- 
 
-const Customer = models.Customer || model("Customer", CustomerSchema)
-export default Customer
+
+const userSchema = new Schema({
+    name: { type: String, required: true },
+    email: { type: String, required: false  },
+    password: { type: String, required: true },
+    role: { type: String, enum: ['customer', 'partner', 'admin'], required: true },
+    phone: { type: String, required: true },
+    verificationCode: { type: String, required: false },
+     isVerified: { type: Boolean, required:false },
+    resetPasswordExpires: { type: Date },
+    address: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Address'
+    }],
+    savedAddresses: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Address'
+    }],
+    location: {
+        type: Schema.Types.ObjectId,
+        ref: 'Location'
+    },
+    profileImage: { type: String },
+    notifications: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Notification'
+    }],
+    services: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Service'
+    }],
+    chat: [{
+        type: Schema.Types.ObjectId,
+        ref: 'Chat'
+    }],
+    createdAt: { type: Date, default: Date.now },
+    updatedAt: { type: Date, default: Date.now },
+});
+
+// const User = mongoose.model('User', userSchema);
+// module.exports = User;
+
+
+const User = models.User || model("User", userSchema)
+export default User

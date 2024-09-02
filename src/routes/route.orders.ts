@@ -1,19 +1,41 @@
-import { Router } from "express"
-import{
-    createOrder, getOrder,
-    getAllOrders, deleteOrder, updateOrder,
-    webhook,
-    verifyOrderPayment
-} from "../controllers/controllers.orders"
+import express from 'express';
+import {
+    createOrder,
+    verifyPayment,
+    getAllOrders,
+    getOrderById,
+    updateOrder,
+    deleteOrder,
+    getOrdersByPartner,
+    getOrdersByCustomer
+} from '../controllers/controllers.orders';
+import { protectRoute } from '../utils/middleware.utils';
 
-const router = Router()
+const router = express.Router();
 
-router.post("/create", createOrder)
-router.post("/verify",verifyOrderPayment)
-router.get("/:id", getOrder)
-router.get("/", getAllOrders)
-router.put("/:id", updateOrder)
-router.delete("/:id", deleteOrder)
-router.post("/webhook",webhook)
+// Route to create a new order
+router.post('/create',protectRoute, createOrder);
 
-export default router
+// Route to verify payment
+router.get('/verify', verifyPayment);
+
+// Route to get all orders
+router.get('/', getAllOrders);
+
+// Route to get a single order by ID
+router.get('/:orderId', getOrderById);
+
+// Route to update an order by ID
+router.put('/:orderId', updateOrder);
+
+// Route to delete an order by ID
+router.delete('/:orderId', deleteOrder);
+
+// Route to get orders by partner ID
+router.get('/partners/:partnerId', getOrdersByPartner);
+
+// Route to get orders by customer ID
+router.get('/customers/:customerId', getOrdersByCustomer);
+
+export default router;
+

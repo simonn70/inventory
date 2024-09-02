@@ -1,11 +1,9 @@
-// store set up and products set up 
-//crud opreations on both
-// set user location  : cordinates 
 
 import { Request, Response } from "express";
-import Vendor from "../database/models/models.vendor";
+
 import Product from "../database/models/models.product";
 import { connectToDatabase } from "../database";
+import User from "../database/models/models.customer";
 
  
 
@@ -18,7 +16,7 @@ export const setupVendor = async (req: Request, res: Response) => {
     await connectToDatabase()
 
     try {    
-            let  vendor = await Vendor.findByIdAndUpdate(
+            let  vendor = await User.findByIdAndUpdate(
                 vendorId,
                 {
                     storeName,
@@ -47,10 +45,10 @@ export const setupVendor = async (req: Request, res: Response) => {
 export const getAllVendors = async (req: Request, res: Response) => {
     await connectToDatabase()
     try {
-        const vendors = await Vendor.find();
-        res.status(200).json(vendors);
+        const vendors = await User.find();
+        res.status(200)
     } catch (error) {
-        console.error('Error fetching vendors:', error);
+        console.error('Error fetcUsers:', error);
         res.status(500).json({ message: 'Server error' });
     }
 };
@@ -62,7 +60,7 @@ export const getVendorById = async (req: Request, res: Response) => {
     
     await connectToDatabase()
     try {
-        const vendor = await Vendor.findById(vendorId);
+        const vendor = await User.findById(vendorId);
         console.log(vendor);
         
         if (!vendor) {
@@ -80,7 +78,7 @@ export const deleteVendorById = async (req: Request, res: Response) => {
     const { id } = req.params;
     await connectToDatabase()
     try {
-        const vendor = await Vendor.findByIdAndDelete(id);
+        const vendor = await User.findByIdAndDelete(id);
         if (!vendor) {
             return res.status(404).json({ message: 'Vendor not found' });
         }
@@ -110,7 +108,7 @@ export const searchVendors = async (req: Request, res: Response) => {
             return res.status(400).json({ message: 'Invalid query parameters' });
         }
 
-        const vendors = await Vendor.find({
+        const vendors = await User.find({
             location: {
                 $near: {
                     $maxDistance: parsedMaxDistance,

@@ -1,223 +1,206 @@
-import { Request, Response, response } from "express";
-import { v4 as uuidv4 } from 'uuid';
-import { connectToDatabase } from "../database";
-import Order from "../database/models/models.order";
-import Customer from '../database/models/models.customer';
-import Vendor from '../database/models/models.vendor';
-import DeliveryGuy from '../database/models/models.deliveryGuy';
-import { initializePayment, verifyPayment } from "../utils/order.utils";
+import { Request, Response } from 'express';
+import { connectToDatabase } from '../database';
+import axios from 'axios';
+import Order from '../database/models/models.order';
+import User from '../database/models/models.customer';
+import Product from '../database/models/models.product';
 
-const PAYSTACK_SECRET_KEY = process.env.PAYSTACK_SECRET_KEY
+const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 
-export const createOrder = async (req:Request, res:Response) => {
-  const { vendorId, customerId, services, deliveryGuyId,email,  paymentDetails, paymentMethod } = req.body;
-
-  if (!vendorId || !customerId || !services  || !paymentDetails || !paymentMethod) {
-    return res.status(400).json({ message: 'Missing required fields' });
-  }
-
-  try {
-    await connectToDatabase();
+export const createOrder = async (req: any, res: Response) => {
+    const { products, location, deliveryTime } = await req.body;
+    const customer =  req.user;
+    console.log(customer);
     
-    const customer = await Customer.findById(customerId);
-    if (!customer) {
-      return res.status(404).json({ message: 'Customer not found' });
-    }
-
-   
-    const vendor = await Vendor.findById(vendorId);
-    if (!vendor) {
-      return res.status(404).json({ message: 'Vendor not found' });
-    }
-
-
-    let deliveryGuy = null;
-    if (deliveryGuyId) {
-      deliveryGuy = await DeliveryGuy.findById(deliveryGuyId);
-      if (!deliveryGuy) {
-        return res.status(404).json({ message: 'Delivery guy not found' });
-      }
-    }
-
-    let paymentResponse;
-    const callbackUrl = 'http://your-frontend-url.com/payment/callback';
-    if (paymentMethod === 'card') {
-      paymentResponse = await initializePayment({
-        email: email,
-        amount: paymentDetails.amount * 100, // Amount in kobo for Paystack (NGN 50.00)
-        metadata: paymentDetails.metadata,
-        callback_url: callbackUrl,
-       
-
-      });
-    } else if (paymentMethod === 'momo') {
-      paymentResponse = await initializePayment({
-        email: paymentDetails.email,
-        amount: paymentDetails.amount * 100, // Amount in kobo for Paystack (NGN 50.00)
-        metadata: paymentDetails.metadata,
-        channels: ['mobile_money'],
-        callback_url: callbackUrl,
-       
-      });
-    } else {
-      return res.status(400).json({ message: 'Invalid payment method' });
-    }
-
-    if (!paymentResponse.status) {
-      return res.status(400).json({ message: 'Payment initialization failed' });
-    }
-
-    
-    const order = new Order({
-      vendorId,
-      customerId,
-      services,
-      deliveryGuy: deliveryGuyId,
-      invoice:paymentResponse.data.reference,
-      status: 'Pending',
-    });
-
-    await order.save();
-    console.log(paymentResponse,order);
-    
-
-
-    res.status(201).json({  payment: paymentResponse.data });
-  } catch (error) {
-    console.error('Error creating order:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-export const verifyOrderPayment = async (req:Request, res:Response) => {
-  const { reference } = req.body;
-   await connectToDatabase()
-  
-  try {
-    const paymentVerification = await verifyPayment(reference);
-    if (!paymentVerification.status) {
-      return res.status(400).json({ message: 'Payment verification failed' });
-    }
-
-  
-    let order = await Order.findOne({ invoice: reference })
-    .populate("services")
-    .populate("deliveryGuy")
-    .populate("customerId");
-  
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-
-    order.status = 'Paid';
-    await order.save();
-
-    res.status(200).json({ message: 'Payment verified and order updated', order });
-  } catch (error) {
-    console.error('Error verifying payment:', error);
-    res.status(500).json({ message: 'Server error' });
-  }
-};
-
-
-
-
-
-export const webhook = async (req:Request, res:Response) => {
-    const secret = req.headers['x-paystack-signature'];
-    
-    // Verify the webhook signature
-    if (!secret || secret !== PAYSTACK_SECRET_KEY) {
-      return res.status(401).json({ message: 'Unauthorized' });
-    }
-  
-    const event = req.body;
-  
     try {
-      await connectToDatabase();
-  
-      // Handle the event
-      switch (event.event) {
-        case 'charge.success':
-          const { reference, status } = event.data;
-          if (status === 'success') {
-            
-            const order = await Order.findOne({ invoice: reference });
-            if (order) {
-              order.status = 'Paid';
-              await order.save();
+        await connectToDatabase();
+
+        // Calculate the total amount
+        let totalAmount:any = 0;
+        for (const item of products) {
+            const product = await Product.findById(item.product);
+            if (!product) {
+                return res.status(404).send({ msg: `Product with ID ${item.product} not found` });
             }
-          }
-          break;
-   
-        default:
-          break;
-      }
-  
-      res.status(200).json({ message: 'Webhook received' });
+            totalAmount += product.price * item.quantity;
+        }
+
+        // Create the order
+        const newOrder = new Order({
+            customer:customer._id,
+            products,
+            totalAmount,
+            location,
+            deliveryTime
+        });
+
+        await newOrder.save();
+        console.log(newOrder);
+
+        const parseTotal = parseFloat(totalAmount)
+        
+        console.log(totalAmount);
+        
+        
+
+        // Initiate Paystack payment
+        // const user = await User.findById(customer);
+        const paymentResponse = await axios.post('https://api.paystack.co/transaction/initialize', {
+            email: 'simon@gmail.com',
+            amount:  Math.round(parseTotal * 100) , // Paystack expects the amount in kobo (or smallest currency unit)
+            metadata: {
+                orderId: newOrder._id
+            }, channels: ["card", "mobile_money"],
+        }, {
+            headers: {
+                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+            }
+        });
+ console.log(paymentResponse.data);
+ 
+        return res.status(201).send({
+            order: newOrder,
+            paymentUrl: paymentResponse.data.data.authorization_url
+        });
+
     } catch (error) {
-      console.error('Error handling webhook:', error);
-      res.status(500).json({ message: 'Server error' });
+        return res.status(500).send({ msg: 'Error creating order', error });
     }
-  }
-  
+};
 
 
-export const getOrder = async (request: Request, response: Response) => {
-    const { id } = request.params
+export const verifyPayment = async (req: Request, res: Response) => {
+    const { reference } = req.query;
+
     try {
-        await connectToDatabase()
-        const order = await Order.findById(id)
+        await connectToDatabase();
+
+        // Verify payment with Paystack
+        const paymentVerificationResponse = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
+            headers: {
+                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
+            }
+        });
+
+        const { status, amount, metadata } = paymentVerificationResponse.data.data;
+
+        if (status === 'success') {
+            // Update the order
+            const order = await Order.findById(metadata.orderId);
+            if (!order) {
+                return res.status(404).send({ msg: 'Order not found' });
+            }
+
+            order.paymentStatus = 'paid';
+            order.status = 'confirmed';
+            order.totalAmount = amount / 100; // Convert back from kobo
+            await order.save();
+
+            return res.status(200).send({ msg: 'Payment successful and order confirmed', order });
+        } else {
+            return res.status(400).send({ msg: 'Payment verification failed' });
+        }
+
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error verifying payment', error });
+    }
+};
+
+
+export const getAllOrders = async (req: Request, res: Response) => {
+    try {
+        await connectToDatabase();
+        const orders = await Order.find().populate('customer partner products.product location');
+        return res.status(200).send(orders);
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error fetching orders', error });
+    }
+};
+
+
+export const getOrderById = async (req: Request, res: Response) => {
+    const { orderId } = req.params;
+
+    try {
+        await connectToDatabase();
+        const order = await Order.findById(orderId).populate('customer partner products.product location');
         if (!order) {
-            return response.status(404).send({ msg: "could not find order"})
+            return res.status(404).send({ msg: 'Order not found' });
         }
-        return response.status(200).send({ order: order })
+        return res.status(200).send(order);
     } catch (error) {
-        // return response.status(500).send({ msg: "error fetching order"})
-        throw error
+        return res.status(500).send({ msg: 'Error fetching order', error });
     }
-}
+};
 
-export const getAllOrders = async (request: Request, response: Response) => {
-    try {
-        await connectToDatabase()
-        const orders = await Order.find({})
-        if (!orders) {
-            return response.status(404).send({ msg: "could not find orders" })
-        }
-        return response.status(200).send({ orders: orders })
-    } catch (error) {
-        return response.status(500).send({ msg: "error fetching orders"})
-    }
-}
 
-export const deleteOrder = async (request: Request, response: Response) => {
-    const { id } = request.params
+export const updateOrder = async (req: Request, res: Response) => {
+    const { orderId } = req.params;
+    const updateData = req.body;
 
     try {
-        await connectToDatabase()
-        const deletedOrder = await Order.findByIdAndDelete(id)
-        if (!deletedOrder) {
-            return response.status(404).send({ msg: "no order to delete"})
-        }
-        return response.status(200).send({ msg: "order deleted successfully", deletedOrder: deletedOrder })
-    } catch (error) {
-        return response.status(500).send({ msg: "error deleting order"})   
-    }
-}
-
-export const updateOrder = async (request: Request, response: Response) => {
-    const data = request.body
-    const { id } = request.params
-
-    try {
-        await connectToDatabase()
-        const updatedOrder = await Order.findByIdAndUpdate(id, data, { new: true })
+        await connectToDatabase();
+        const updatedOrder = await Order.findByIdAndUpdate(orderId, updateData, { new: true });
         if (!updatedOrder) {
-            return response.status(404).send({ msg: "no order found to update"})
+            return res.status(404).send({ msg: 'Order not found' });
         }
-        return response.status(200).send({ msg: "order updated", order: updatedOrder })
+        return res.status(200).send(updatedOrder);
     } catch (error) {
-        return response.status(500).send({ msg: "error updating order" })
+        return res.status(500).send({ msg: 'Error updating order', error });
     }
-}
+};
+
+
+export const deleteOrder = async (req: Request, res: Response) => {
+    const { orderId } = req.params;
+
+    try {
+        await connectToDatabase();
+        const deletedOrder = await Order.findByIdAndDelete(orderId);
+        if (!deletedOrder) {
+            return res.status(404).send({ msg: 'Order not found' });
+        }
+        return res.status(200).send({ msg: 'Order deleted successfully' });
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error deleting order', error });
+    }
+};
+
+
+export const getOrdersByPartner = async (req: Request, res: Response) => {
+    const { partnerId } = req.params;
+
+    try {
+        await connectToDatabase();
+        const orders = await Order.find({ partner: partnerId })
+            
+
+        if (!orders.length) {
+            return res.status(404).send({ msg: 'No orders found for this partner' });
+        }
+
+        return res.status(200).send(orders);
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error fetching orders by partner', error });
+    }
+};
+
+
+export const getOrdersByCustomer = async (req: Request, res: Response) => {
+    const { customerId } = req.params;
+
+    try {
+        await connectToDatabase();
+        const orders = await Order.find({ customer: customerId })
+           
+
+        if (!orders.length) {
+            return res.status(404).send({ msg: 'No orders found for this customer' });
+        }
+
+        return res.status(200).send(orders);
+    } catch (error) {
+        return res.status(500).send({ msg: 'Error fetching orders by customer', error });
+    }
+};
+

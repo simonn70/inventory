@@ -1,9 +1,12 @@
+import { Request, Response } from "express";
+import bcrypt from "bcrypt";
+// Adjust the path as needed
+import jwt from "jsonwebtoken"; // Assuming you're using JWT for authentication
 import { UserData, loginUserParams } from "../types"
 import Customer from "../database/models/models.customer"
-import DeliveryGuy from "../database/models/models.deliveryGuy"
-import Vendor from "../database/models/models.vendor"
 import { connectToDatabase } from "../database"
 import { logIn } from "../utils/services.utils"
+import User from "../database/models/models.customer"
 
 
 export const registerUser = async ({
@@ -12,7 +15,7 @@ export const registerUser = async ({
     try {
         await connectToDatabase()
         switch(role) {
-            case "Customer":
+            case "customer":
                 return await Customer.create({
                     name,
                     email,
@@ -20,16 +23,16 @@ export const registerUser = async ({
                     password,
                     verificationCode
                 })
-            case "DeliveryGuy":
-                return await DeliveryGuy.create({
+            case "admin":
+                return await User.create({
                     name,
                     email,
                     phoneNumber,
                     password,
                     verificationCode
                 })
-            case "Vendor":
-                return await Vendor.create({
+            case "partner":
+                return await User.create({
                     storeName: name,
                     storeEmail: email,
                     phoneNumber,
@@ -42,26 +45,58 @@ export const registerUser = async ({
     }
 }
 
-export const loginUser = async ({ role, email, password }: loginUserParams) => {
+
+export const login = async (request: Request, response: Response) => {
+    const { role, email, password } = request.body;
+
     try {
-        await connectToDatabase()
-        switch(role) {
-            case "Customer":
-                const customer = await logIn(role, Customer, email, password)
-                return customer
+        // Ensure the database is connected
+        await connectToDatabase();
 
-            case "DeliveryGuy":
-                const delivery_guy = await logIn(role, DeliveryGuy, email, password)
-                return delivery_guy
+        // Find the user by email and role
+        const user = await User.findOne({ email, role });
 
-            case "Vendor":
-                const vendor = await logIn(role, Vendor, email, password)
-                return vendor
+        if (!user) {
+            return response.status(401).send({ msg: "Invalid email or password" });
         }
+
+        // Compare the provided password with the stored hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+
+        if (!isMatch) {
+            return response.status(401).send({ msg: "Invalid email or password" });
+        }
+
+        if (!user.isVerified) {
+            return response.status(403).send({ msg: "Account not verified" });
+        }
+
+        // Generate a token (assuming you're using JWT)
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET || 'defaultsecret',
+            { expiresIn: '1h' } // Set token expiration as needed
+        );
+
+        // Send back the token and user data
+        return response.status(200).send({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                // Include any other user fields you want to return
+            }
+        });
+
     } catch (error) {
-        throw error
+        console.error('Error during login:', error);
+        return response.status(500).send({ msg: "Login failed" });
     }
-}
+};
+
 
 //get profile details  for user roles
 // check role of each user and based on that fetch their profile details

@@ -28,7 +28,7 @@ const corsOptions = {
 
 app.use(cors());
 
-app.use("api/auth", authRoutes);
+app.use("/api/auth", authRoutes);
 app.use("api/services", services);
 app.use("api/admin", admin);
 app.use("api/vendor", vendorRoutes);

@@ -4,7 +4,8 @@ const locationSchema = new Schema({
     user: { type: Schema.Types.ObjectId, ref: 'User' },
     latitude: { type: Number, required: true },
     longitude: { type: Number, required: true },
-    name: { type: String, required: true },
+    name: { type: String, required: false },
+    category: { type: String, required: false },
     createdAt: { type: Date, default: Date.now },
 });
 

@@ -4,8 +4,8 @@ import { connectToDatabase } from '../database';
 import Location from '../database/models/models.location';
 
 export const setLocation = async (request: any, response: Response) => {
-    const { longitude, latitude } = request.body;
-    const user = request.user; // Assuming this is set by middleware (e.g., authentication middleware)
+    const { longitude, latitude,category } = request.body;
+    const user = request.user; 
  console.log(user);
  
     try {
@@ -23,7 +23,8 @@ export const setLocation = async (request: any, response: Response) => {
             longitude,
             latitude,
             user: user._id, 
-            name:locationName, 
+            name: locationName, 
+            category
         });
 
         // Save the location to the database

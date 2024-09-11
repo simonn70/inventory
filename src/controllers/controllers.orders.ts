@@ -10,7 +10,7 @@ const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 export const createOrder = async (req: any, res: Response) => {
     const { products, location, deliveryTime } = await req.body;
     const customer =  req.user;
-    console.log(customer);
+   
     
     try {
         await connectToDatabase();

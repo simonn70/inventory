@@ -29,14 +29,14 @@ const corsOptions = {
 app.use(cors());
 
 app.use("/api/auth", authRoutes);
-app.use("api/services", services);
-app.use("api/admin", admin);
-app.use("api/vendor", vendorRoutes);
-app.use("api/product", productRoutes);
-app.use("api/location", locationRoutes);
-app.use("api/orders", ordersRoutes);
-app.use("api/cart", cart);
-app.use("api/partner", partner);
+app.use("/api/services", services);
+app.use("/api/admin", admin);
+app.use("/api/vendor", vendorRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/location", locationRoutes);
+app.use("/api/orders", ordersRoutes);
+app.use("/api/cart", cart);
+app.use("/api/partner", partner);
 // Function to connect to the database and start the server
 const startServer = async () => {
     try {

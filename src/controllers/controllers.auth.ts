@@ -127,6 +127,57 @@ export const verifyAccount = async (request: Request, response: Response) => {
 };
 
 
+export const login = async (request: Request, response: Response) => {
+    const { role, phone, password } = request.body;
+    
+    try {
+        // Ensure the database is connected
+        await connectToDatabase();
+        
+        // Find the user by email and role
+        const user = await User.findOne({ phone, role });
+        
+        if (!user) {
+            return response.status(401).send({ msg: "Invalid email or password" });
+        }
+        
+        // Compare the provided password with the stored hashed password
+        const isMatch = await bcrypt.compare(password, user.password);
+        
+        if (!isMatch) {
+            return response.status(401).send({ msg: "Invalid email or password" });
+        }
+        
+        if (!user.isVerified) {
+            return response.status(403).send({ msg: "Account not verified" });
+        }
+        
+        // Generate a token (assuming you're using JWT)
+        const token = jwt.sign(
+            { id: user._id, role: user.role },
+            process.env.JWT_SECRET || 'defaultsecret',
+            { expiresIn: '1h' } // Set token expiration as needed
+        );
+        
+        // Send back the token and user data
+        return response.status(200).send({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                // Include any other user fields you want to return
+            }
+        });
+        
+    } catch (error) {
+        console.error('Error during login:', error);
+        return response.status(500).send({ msg: "Login failed" });
+    }
+};
+
 export const resendVerificationCode = async (request: any, response: Response) => {
     const user = request.user;
     // Assuming userId is attached to the request
@@ -184,59 +235,6 @@ export const resendVerificationCode = async (request: any, response: Response) =
         });
     }
 };
-
-
-export const login = async (request: Request, response: Response) => {
-    const { role, phone, password } = request.body;
-
-    try {
-        // Ensure the database is connected
-        await connectToDatabase();
-
-        // Find the user by email and role
-        const user = await User.findOne({ phone, role });
-
-        if (!user) {
-            return response.status(401).send({ msg: "Invalid email or password" });
-        }
-
-        // Compare the provided password with the stored hashed password
-        const isMatch = await bcrypt.compare(password, user.password);
-
-        if (!isMatch) {
-            return response.status(401).send({ msg: "Invalid email or password" });
-        }
-
-        if (!user.isVerified) {
-            return response.status(403).send({ msg: "Account not verified" });
-        }
-
-        // Generate a token (assuming you're using JWT)
-        const token = jwt.sign(
-            { id: user._id, role: user.role },
-            process.env.JWT_SECRET || 'defaultsecret',
-            { expiresIn: '1h' } // Set token expiration as needed
-        );
-
-        // Send back the token and user data
-        return response.status(200).send({
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                phone: user.phone,
-                // Include any other user fields you want to return
-            }
-        });
-
-    } catch (error) {
-        console.error('Error during login:', error);
-        return response.status(500).send({ msg: "Login failed" });
-    }
-};
-
 
 export const sendPasswordResetEmail = async (request: Request, response: Response) => {
     const { phone } = request.body;
@@ -298,6 +296,7 @@ export const sendPasswordResetEmail = async (request: Request, response: Respons
         return response.status(500).send({ msg: "Failed to send password reset email" });
     }
 };
+
 
 
 export const resetPassword = async (request: Request, response: Response) => {

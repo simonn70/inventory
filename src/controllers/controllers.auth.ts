@@ -309,7 +309,7 @@ export const resetPassword = async (request: Request, response: Response) => {
         // Find the user by email and ensure the token is valid and not expired
         const user = await User.findOne({
             verifcationCode,
-            resetPasswordExpires: { $gt: Date.now() } // Check that the token is not expired
+            // Check that the token is not expired
         });
 
         if (!user) {
@@ -322,7 +322,7 @@ export const resetPassword = async (request: Request, response: Response) => {
         // Update the user's password and clear the reset token and expiry
         user.password = hashedPassword;
         user.verificationCode = undefined;
-        user.resetPasswordExpires = undefined;
+        
         await user.save();
 
         return response.status(200).send({ msg: "Password has been reset successfully" });

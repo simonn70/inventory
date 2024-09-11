@@ -11,7 +11,7 @@ router.post("/re-send", protectRoute, resendVerificationCode)
 
 router.get("/get-profile", protectRoute, getProfile)
 router.post("/send-password-reset-email", sendPasswordResetEmail)
-router.get("/reset-password",protectRoute, resetPassword )
+router.post("/reset-password", resetPassword )
 router.put("/update-profile",protectRoute, updateProfile)
 
 export default router

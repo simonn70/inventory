@@ -10,7 +10,7 @@ router.post("/verify-account", verifyAccount)
 router.post("/re-send", protectRoute, resendVerificationCode)
 
 router.get("/get-profile", protectRoute, getProfile)
-router.get("/send-password-reset-email", protectRoute, sendPasswordResetEmail)
+router.post("/send-password-reset-email", sendPasswordResetEmail)
 router.get("/reset-password",protectRoute, resetPassword )
 router.put("/update-profile",protectRoute, updateProfile)
 

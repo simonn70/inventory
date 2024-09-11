@@ -17,7 +17,7 @@ const axios_1 = __importDefault(require("axios"));
 const sendSMS = (message, recipient) => __awaiter(void 0, void 0, void 0, function* () {
     const uelloSendUrl = "https://uellosend.com/quicksend/";
     const api_key = "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.=eyJkYXRhIjp7InVzZXJpZCI6MjAzOSwiYXBpU2VjcmV0IjoidzJFclZvcGhSSk1NPXhUIiwiaXNzdWVyIjoiVUVMTE9TRU5EIn19";
-    const sender_id = "UelloSend";
+    const sender_id = "LaundryBowl";
     try {
         const response = yield axios_1.default.post(uelloSendUrl, {
             api_key: api_key,

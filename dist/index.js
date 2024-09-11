@@ -36,15 +36,15 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 app.use((0, cors_1.default)());
-app.use("api/auth", routes_auth_1.default);
-app.use("api/services", route_services_1.default);
-app.use("api/admin", route_admin_1.default);
-app.use("api/vendor", route_vendor_1.default);
-app.use("api/product", route_product_1.default);
-app.use("api/location", route_location_1.default);
-app.use("api/orders", route_orders_1.default);
-app.use("api/cart", route_cart_1.default);
-app.use("api/partner", route_partner_1.default);
+app.use("/api/auth", routes_auth_1.default);
+app.use("/api/services", route_services_1.default);
+app.use("/api/admin", route_admin_1.default);
+app.use("/api/vendor", route_vendor_1.default);
+app.use("/api/product", route_product_1.default);
+app.use("/api/location", route_location_1.default);
+app.use("/api/orders", route_orders_1.default);
+app.use("/api/cart", route_cart_1.default);
+app.use("/api/partner", route_partner_1.default);
 // Function to connect to the database and start the server
 const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
     try {

@@ -20,7 +20,7 @@ const models_order_1 = __importDefault(require("../../database/models/models.ord
 // assign orders to partners
 const viewAllPartners = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const partners = yield models_customer_1.default.find().populate('user'); // Assuming Partner references a User model
+        const partners = yield models_customer_1.default.find();
         res.status(200).json({ successful: true, partners });
     }
     catch (error) {
@@ -31,7 +31,7 @@ const viewAllPartners = (req, res) => __awaiter(void 0, void 0, void 0, function
 exports.viewAllPartners = viewAllPartners;
 const viewAllOrders = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        const orders = yield models_order_1.default.find().populate('customer').populate('assignedPartner'); // Populating customer and assignedPartner fields
+        const orders = yield models_order_1.default.find(); // Populating customer and assignedPartner fields
         res.status(200).json({ successful: true, orders });
     }
     catch (error) {

@@ -17,8 +17,8 @@ const axios_1 = __importDefault(require("axios"));
 const database_1 = require("../database");
 const models_location_1 = __importDefault(require("../database/models/models.location"));
 const setLocation = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
-    const { longitude, latitude } = request.body;
-    const user = request.user; // Assuming this is set by middleware (e.g., authentication middleware)
+    const { longitude, latitude, category } = request.body;
+    const user = request.user;
     console.log(user);
     try {
         yield (0, database_1.connectToDatabase)();
@@ -33,6 +33,7 @@ const setLocation = (request, response) => __awaiter(void 0, void 0, void 0, fun
             latitude,
             user: user._id,
             name: locationName,
+            category
         });
         // Save the location to the database
         yield newLocation.save();

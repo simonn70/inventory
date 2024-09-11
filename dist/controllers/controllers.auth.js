@@ -12,7 +12,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateProfile = exports.getProfile = exports.resetPassword = exports.sendPasswordResetEmail = exports.login = exports.resendVerificationCode = exports.verifyAccount = exports.register = void 0;
+exports.updateProfile = exports.getProfile = exports.resetPassword = exports.sendPasswordResetEmail = exports.resendVerificationCode = exports.login = exports.verifyAccount = exports.register = void 0;
 const validation_utils_1 = require("../utils/validation.utils");
 const services_utils_1 = __importDefault(require("../utils/services.utils"));
 const database_1 = require("../database");
@@ -115,6 +115,46 @@ const verifyAccount = (request, response) => __awaiter(void 0, void 0, void 0, f
     }
 });
 exports.verifyAccount = verifyAccount;
+const login = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
+    const { role, phone, password } = request.body;
+    try {
+        // Ensure the database is connected
+        yield (0, database_1.connectToDatabase)();
+        // Find the user by email and role
+        const user = yield models_customer_1.default.findOne({ phone, role });
+        if (!user) {
+            return response.status(401).send({ msg: "Invalid email or password" });
+        }
+        // Compare the provided password with the stored hashed password
+        const isMatch = yield bcrypt_1.default.compare(password, user.password);
+        if (!isMatch) {
+            return response.status(401).send({ msg: "Invalid email or password" });
+        }
+        if (!user.isVerified) {
+            return response.status(403).send({ msg: "Account not verified" });
+        }
+        // Generate a token (assuming you're using JWT)
+        const token = jsonwebtoken_1.default.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'defaultsecret', { expiresIn: '1h' } // Set token expiration as needed
+        );
+        // Send back the token and user data
+        return response.status(200).send({
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                role: user.role,
+                phone: user.phone,
+                // Include any other user fields you want to return
+            }
+        });
+    }
+    catch (error) {
+        console.error('Error during login:', error);
+        return response.status(500).send({ msg: "Login failed" });
+    }
+});
+exports.login = login;
 const resendVerificationCode = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
     const user = request.user;
     // Assuming userId is attached to the request
@@ -166,46 +206,6 @@ const resendVerificationCode = (request, response) => __awaiter(void 0, void 0, 
     }
 });
 exports.resendVerificationCode = resendVerificationCode;
-const login = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
-    const { role, phone, password } = request.body;
-    try {
-        // Ensure the database is connected
-        yield (0, database_1.connectToDatabase)();
-        // Find the user by email and role
-        const user = yield models_customer_1.default.findOne({ phone, role });
-        if (!user) {
-            return response.status(401).send({ msg: "Invalid email or password" });
-        }
-        // Compare the provided password with the stored hashed password
-        const isMatch = yield bcrypt_1.default.compare(password, user.password);
-        if (!isMatch) {
-            return response.status(401).send({ msg: "Invalid email or password" });
-        }
-        if (!user.isVerified) {
-            return response.status(403).send({ msg: "Account not verified" });
-        }
-        // Generate a token (assuming you're using JWT)
-        const token = jsonwebtoken_1.default.sign({ id: user._id, role: user.role }, process.env.JWT_SECRET || 'defaultsecret', { expiresIn: '1h' } // Set token expiration as needed
-        );
-        // Send back the token and user data
-        return response.status(200).send({
-            token,
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                role: user.role,
-                phone: user.phone,
-                // Include any other user fields you want to return
-            }
-        });
-    }
-    catch (error) {
-        console.error('Error during login:', error);
-        return response.status(500).send({ msg: "Login failed" });
-    }
-});
-exports.login = login;
 const sendPasswordResetEmail = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
     const { phone } = request.body;
     try {

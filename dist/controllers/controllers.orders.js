@@ -21,7 +21,6 @@ const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 const createOrder = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { products, location, deliveryTime } = yield req.body;
     const customer = req.user;
-    console.log(customer);
     try {
         yield (0, database_1.connectToDatabase)();
         // Calculate the total amount

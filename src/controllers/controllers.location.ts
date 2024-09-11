@@ -12,10 +12,10 @@ export const setLocation = async (request: any, response: Response) => {
         await connectToDatabase();
 
         // Reverse geocode to get the location name
-        const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-        const geocodeResponse = await axios.get(geocodeUrl);
-        const locationName = geocodeResponse.data.name;
-        console.log(geocodeResponse.data);
+        // const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+        // const geocodeResponse = await axios.get(geocodeUrl);
+        // const locationName = geocodeResponse.data.name;
+        // console.log(geocodeResponse.data);
         
 
         // Create a new location instance
@@ -23,7 +23,7 @@ export const setLocation = async (request: any, response: Response) => {
             longitude,
             latitude,
             user: user._id, 
-            name: locationName, 
+            // name: locationName, 
             category
         });
 

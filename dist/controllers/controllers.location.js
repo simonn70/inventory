@@ -13,7 +13,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.setLocation = void 0;
-const axios_1 = __importDefault(require("axios"));
 const database_1 = require("../database");
 const models_location_1 = __importDefault(require("../database/models/models.location"));
 const setLocation = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
@@ -23,16 +22,16 @@ const setLocation = (request, response) => __awaiter(void 0, void 0, void 0, fun
     try {
         yield (0, database_1.connectToDatabase)();
         // Reverse geocode to get the location name
-        const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
-        const geocodeResponse = yield axios_1.default.get(geocodeUrl);
-        const locationName = geocodeResponse.data.name;
-        console.log(geocodeResponse.data);
+        // const geocodeUrl = `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}`;
+        // const geocodeResponse = await axios.get(geocodeUrl);
+        // const locationName = geocodeResponse.data.name;
+        // console.log(geocodeResponse.data);
         // Create a new location instance
         const newLocation = new models_location_1.default({
             longitude,
             latitude,
             user: user._id,
-            name: locationName,
+            // name: locationName, 
             category
         });
         // Save the location to the database

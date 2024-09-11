@@ -219,10 +219,10 @@ const sendPasswordResetEmail = (request, response) => __awaiter(void 0, void 0, 
         // Generate a reset token
         const verificationCode = (0, validation_utils_1.generateVerificationCode)(6);
         // Set the token's expiry time (e.g., 1 hour from now)
-        const tokenExpiry = Date.now() + 3600000; // 1 hour in milliseconds
+        // const tokenExpiry = Date.now() + 3600000; // 1 hour in milliseconds
         // Store the token and expiry in the user's document
         user.verificationCode = verificationCode;
-        user.resetPasswordExpires = tokenExpiry;
+        // user.resetPasswordExpires = tokenExpiry;
         yield user.save();
         // Send the email with nodemailer
         // const transporter = nodemailer.createTransport({
@@ -243,15 +243,14 @@ const sendPasswordResetEmail = (request, response) => __awaiter(void 0, void 0, 
         // };
         // await transporter.sendMail(mailOptions);
         const message = `You are receiving this because you (or someone else) have requested to reset your password.\n\n
-            Please click on the following link, or paste it into your browser to complete the process:\n\n
-            ${verificationCode}\n\n
-            If you did not request this, please ignore this email and your password will remain unchanged.\n`;
+           Kindly verify using this code: ${verificationCode}\n\n
+            If you did not request this, please ignore this message and your password will remain unchanged.\n`;
         yield (0, sendSms_utils_1.sendSMS)(message, phone);
-        return response.status(200).send({ msg: "Password reset email sent" });
+        return response.status(200).send({ msg: "Password reset sms sent" });
     }
     catch (error) {
-        console.error("Error sending password reset email:", error);
-        return response.status(500).send({ msg: "Failed to send password reset email" });
+        console.error("Error sending password reset sms:", error);
+        return response.status(500).send({ msg: "Failed to send password reset sms" });
     }
 });
 exports.sendPasswordResetEmail = sendPasswordResetEmail;

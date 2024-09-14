@@ -299,7 +299,7 @@ export const sendPasswordResetEmail = async (request: Request, response: Respons
 
 
 export const resetPassword = async (request: Request, response: Response) => {
-    const { verifcationCode, newPassword } = request.body;
+    const { verificationCode, newPassword } = request.body;
    
 
     try {
@@ -308,9 +308,13 @@ export const resetPassword = async (request: Request, response: Response) => {
 
         // Find the user by email and ensure the token is valid and not expired
         const user = await User.findOne({
-            verifcationCode,
+            verificationCode,
             // Check that the token is not expired
         });
+        console.log(user);
+        console.log(verificationCode);
+        
+        
 
         if (!user) {
             return response.status(400).send({ msg: "Invalid or expired token" });

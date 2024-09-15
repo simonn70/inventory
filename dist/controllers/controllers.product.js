@@ -54,7 +54,7 @@ const getProductsByService = (req, res) => __awaiter(void 0, void 0, void 0, fun
     const { serviceId } = req.params;
     try {
         yield (0, database_1.connectToDatabase)();
-        const products = yield models_product_1.default.find({ service: serviceId }).populate('service').populate('createdBy');
+        const products = yield models_product_1.default.find({ service: serviceId }).populate('service');
         return res.status(200).send(products);
     }
     catch (error) {
@@ -67,7 +67,7 @@ const getProductById = (req, res) => __awaiter(void 0, void 0, void 0, function*
     const { productId } = req.params;
     try {
         yield (0, database_1.connectToDatabase)();
-        const product = yield models_product_1.default.findById(productId).populate('service').populate('createdBy');
+        const product = yield models_product_1.default.findById(productId).populate('service');
         if (!product) {
             return res.status(404).send({ msg: 'Product not found' });
         }

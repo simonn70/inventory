@@ -255,15 +255,17 @@ const sendPasswordResetEmail = (request, response) => __awaiter(void 0, void 0, 
 });
 exports.sendPasswordResetEmail = sendPasswordResetEmail;
 const resetPassword = (request, response) => __awaiter(void 0, void 0, void 0, function* () {
-    const { verifcationCode, newPassword } = request.body;
+    const { verificationCode, newPassword } = request.body;
     try {
         // Ensure the database is connected
         yield (0, database_1.connectToDatabase)();
         // Find the user by email and ensure the token is valid and not expired
         const user = yield models_customer_1.default.findOne({
-            verifcationCode,
-            resetPasswordExpires: { $gt: Date.now() } // Check that the token is not expired
+            verificationCode,
+            // Check that the token is not expired
         });
+        console.log(user);
+        console.log(verificationCode);
         if (!user) {
             return response.status(400).send({ msg: "Invalid or expired token" });
         }
@@ -272,7 +274,6 @@ const resetPassword = (request, response) => __awaiter(void 0, void 0, void 0, f
         // Update the user's password and clear the reset token and expiry
         user.password = hashedPassword;
         user.verificationCode = undefined;
-        user.resetPasswordExpires = undefined;
         yield user.save();
         return response.status(200).send({ msg: "Password has been reset successfully" });
     }

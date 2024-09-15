@@ -49,7 +49,7 @@ export const getProductsByService = async (req: Request, res: Response) => {
     try {
         await connectToDatabase();
 
-        const products = await Product.find({ service: serviceId }).populate('service').populate('createdBy');
+        const products = await Product.find({ service: serviceId }).populate('service')
 
         return res.status(200).send(products);
     } catch (error) {
@@ -64,7 +64,7 @@ export const getProductById = async (req: Request, res: Response) => {
     try {
         await connectToDatabase();
 
-        const product = await Product.findById(productId).populate('service').populate('createdBy');
+        const product = await Product.findById(productId).populate('service')
 
         if (!product) {
             return res.status(404).send({ msg: 'Product not found' });

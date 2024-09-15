@@ -8,15 +8,14 @@ import Product from '../database/models/models.product';
 const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 
 export const createOrder = async (req: any, res: Response) => {
-    const { products, location, deliveryTime } = await req.body;
-    const customer =  req.user;
-   
+    const { products, paymentMethod, location, deliveryTime } = req.body;
+    const customer = req.user;
     
     try {
         await connectToDatabase();
 
-        // Calculate the total amount
-        let totalAmount:any = 0;
+        // Calculate the total amount for the order
+        let totalAmount: number = 0;
         for (const item of products) {
             const product = await Product.findById(item.product);
             if (!product) {
@@ -25,44 +24,51 @@ export const createOrder = async (req: any, res: Response) => {
             totalAmount += product.price * item.quantity;
         }
 
-        // Create the order
+        // Create the order object
         const newOrder = new Order({
-            customer:customer._id,
+            customer: customer._id,
             products,
             totalAmount,
+            paymentMethod,
             location,
             deliveryTime
         });
 
+        // Save the order to the database
         await newOrder.save();
-        console.log(newOrder);
 
-        const parseTotal = parseFloat(totalAmount)
-        
-        console.log(totalAmount);
-        
-        
+        // Handle payment based on payment method
+        if (paymentMethod === 'card') {
+            // Proceed with Paystack payment
+            const parseTotal = parseFloat(totalAmount.toFixed(2));
 
-        // Initiate Paystack payment
-        // const user = await User.findById(customer);
-        const paymentResponse = await axios.post('https://api.paystack.co/transaction/initialize', {
-            email: 'simon@gmail.com',
-            amount:  Math.round(parseTotal * 100) , // Paystack expects the amount in kobo (or smallest currency unit)
-            metadata: {
-                orderId: newOrder._id
-            }, channels: ["card", "mobile_money"],
-        }, {
-            headers: {
-                Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
-            }
-        });
- console.log(paymentResponse.data);
- 
-        return res.status(201).send({
-            order: newOrder,
-            paymentUrl: paymentResponse.data.data.authorization_url
-        });
+            // Initialize Paystack payment
+            const paymentResponse = await axios.post('https://api.paystack.co/transaction/initialize', {
+                email: customer.email, // assuming customer object has an email field
+                amount: Math.round(parseTotal * 100), // amount in Kobo
+                metadata: {
+                    orderId: newOrder._id
+                },
+                channels: ["card", "mobile_money"],
+            }, {
+                headers: {
+                    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+                }
+            });
 
+            return res.status(201).send({
+                order: newOrder,
+                paymentUrl: paymentResponse.data.data.authorization_url
+            });
+        } else if (paymentMethod === 'payOnDelivery') {
+            // Skip payment processing for Pay on Delivery
+            return res.status(201).send({
+                order: newOrder,
+                message: 'Order created successfully. Payment will be made on delivery.'
+            });
+        } else {
+            return res.status(400).send({ msg: 'Invalid payment method' });
+        }
     } catch (error) {
         return res.status(500).send({ msg: 'Error creating order', error });
     }

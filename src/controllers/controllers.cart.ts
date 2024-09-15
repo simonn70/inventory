@@ -6,18 +6,12 @@ import { connectToDatabase } from '../database';
 import Product from '../database/models/models.product';
 import Cart from '../database/models/models.cart';
 
-export const addToCart = async (req:any, res: Response) => {
-    const { productId, quantity } = req.body;
+export const addToCart = async (req: any, res: Response) => {
+    const { products } = req.body; // Assuming products is an array of { productId, quantity }
     const user = req.user;
 
     try {
         await connectToDatabase();
-
-        // Find the product
-        const product = await Product.findById(productId);
-        if (!product) {
-            return res.status(404).send({ msg: 'Product not found' });
-        }
 
         // Find the user's cart
         let cart = await Cart.findOne({ user: user._id });
@@ -26,10 +20,21 @@ export const addToCart = async (req:any, res: Response) => {
         if (!cart) {
             cart = new Cart({
                 user: user._id,
-                items: [{ product: productId, quantity }],
-                totalAmount: product.price * quantity
+                items: [],
+                totalAmount: 0,
             });
-        } else {
+        }
+
+        // Loop through the array of products and handle each one
+        for (const productItem of products) {
+            const { productId, quantity } = productItem;
+
+            // Find the product
+            const product = await Product.findById(productId);
+            if (!product) {
+                return res.status(404).send({ msg: `Product with ID ${productId} not found` });
+            }
+
             // Check if the product is already in the cart
             const cartItem = cart.items.find(item => item.product.toString() === productId);
             if (cartItem) {

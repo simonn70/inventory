@@ -28,7 +28,6 @@ export const addToCart = async (req: any, res: Response) => {
         // Loop through the array of products and handle each one
         for (const productItem of products) {
             const { productId, quantity } = productItem;
-
             // Find the product
             const product = await Product.findById(productId);
             if (!product) {
@@ -39,7 +38,7 @@ export const addToCart = async (req: any, res: Response) => {
             const cartItem = cart.items.find(item => item.product.toString() === productId);
             if (cartItem) {
                 // Update quantity and total amount
-                cartItem.quantity += quantity;
+                cartItem.quantity = quantity;
             } else {
                 // Add new product to the cart
                 cart.items.push({ product: productId, quantity });

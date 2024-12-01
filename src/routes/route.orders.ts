@@ -1,7 +1,7 @@
 import express from 'express';
 import {
     createOrder,
-    verifyPayment,
+    
     getAllOrders,
     getOrderById,
     updateOrder,
@@ -17,7 +17,7 @@ const router = express.Router();
 router.post('/create',protectRoute, createOrder);
 
 // Route to verify payment
-router.get('/verify', verifyPayment);
+// router.get('/verify', verifyPayment);
 
 // Route to get all orders
 router.get('/', getAllOrders);

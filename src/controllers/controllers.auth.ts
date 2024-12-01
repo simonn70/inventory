@@ -156,7 +156,7 @@ export const login = async (request: Request, response: Response) => {
         const token = jwt.sign(
             { id: user._id, role: user.role },
             process.env.JWT_SECRET || 'defaultsecret',
-            { expiresIn: '1h' } // Set token expiration as needed
+             // Set token expiration as needed
         );
         
         // Send back the token and user data

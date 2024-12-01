@@ -6,7 +6,8 @@ const orderSchema = new Schema({
     partner: { type: Schema.Types.ObjectId, ref: 'User' },
     products: [{
         product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-        quantity: { type: Number, required: true }
+        quantity: { type: Number, required: true },
+        service: { type: String, required: true }
     }],
     totalAmount: { type: Number, required: true },
     status: { 
@@ -22,6 +23,7 @@ const orderSchema = new Schema({
     // payment: { type: Schema.Types.ObjectId, ref: 'Payment' },
     location: { type: Schema.Types.ObjectId, ref: 'Location' },
     deliveryTime: { type: Date },
+    pickupTime: { type: Date },
     createdAt: { type: Date, default: Date.now },
     updatedAt: { type: Date, default: Date.now },
 });

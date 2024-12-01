@@ -2,36 +2,52 @@ import { Request, Response } from 'express';
 import { connectToDatabase } from '../database';
 import axios from 'axios';
 import Order from '../database/models/models.order';
+import Location from '../database/models/models.location';
 import User from '../database/models/models.customer';
 import Product from '../database/models/models.product';
 
 const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 
 export const createOrder = async (req: any, res: Response) => {
-    const { products, paymentMethod, location, deliveryTime } = req.body;
+    const { products, paymentMethod, locationCategory, deliveryTime, pickupTime } = req.body;
     const customer = req.user;
-    
+
     try {
         await connectToDatabase();
 
-        // Calculate the total amount for the order
+        // Find the location by locationCategory
+        const location = await Location.findOne({ category: locationCategory });
+        if (!location) {
+            return res.status(404).send({ msg: `Location with category '${locationCategory}' not found` });
+        }
+
+        // Calculate the total amount for the order and populate service in products
         let totalAmount: number = 0;
+        const populatedProducts = [];
+        
         for (const item of products) {
-            const product = await Product.findById(item.product);
+            const product = await Product.findById(item.product).populate('service');
             if (!product) {
                 return res.status(404).send({ msg: `Product with ID ${item.product} not found` });
             }
+
             totalAmount += product.price * item.quantity;
+            populatedProducts.push({
+                product: product._id,
+                service: product.service.name,
+                quantity: item.quantity,
+            });
         }
 
         // Create the order object
         const newOrder = new Order({
             customer: customer._id,
-            products,
+            products: populatedProducts,
             totalAmount,
             paymentMethod,
-            location,
-            deliveryTime
+            location: location._id,
+            deliveryTime,
+            pickupTime,
         });
 
         // Save the order to the database
@@ -75,48 +91,11 @@ export const createOrder = async (req: any, res: Response) => {
 };
 
 
-export const verifyPayment = async (req: Request, res: Response) => {
-    const { reference } = req.query;
-
-    try {
-        await connectToDatabase();
-
-        // Verify payment with Paystack
-        const paymentVerificationResponse = await axios.get(`https://api.paystack.co/transaction/verify/${reference}`, {
-            headers: {
-                Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`
-            }
-        });
-
-        const { status, amount, metadata } = paymentVerificationResponse.data.data;
-
-        if (status === 'success') {
-            // Update the order
-            const order = await Order.findById(metadata.orderId);
-            if (!order) {
-                return res.status(404).send({ msg: 'Order not found' });
-            }
-
-            order.paymentStatus = 'paid';
-            order.status = 'confirmed';
-            order.totalAmount = amount / 100; // Convert back from kobo
-            await order.save();
-
-            return res.status(200).send({ msg: 'Payment successful and order confirmed', order });
-        } else {
-            return res.status(400).send({ msg: 'Payment verification failed' });
-        }
-
-    } catch (error) {
-        return res.status(500).send({ msg: 'Error verifying payment', error });
-    }
-};
-
 
 export const getAllOrders = async (req: Request, res: Response) => {
     try {
         await connectToDatabase();
-        const orders = await Order.find().populate('customer partner products.product location');
+        const orders = await Order.find();
         return res.status(200).send(orders);
     } catch (error) {
         return res.status(500).send({ msg: 'Error fetching orders', error });

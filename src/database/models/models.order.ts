@@ -21,7 +21,8 @@ const orderSchema = new Schema({
         default: 'unpaid'
     },
     // payment: { type: Schema.Types.ObjectId, ref: 'Payment' },
-    location: { type: Schema.Types.ObjectId, ref: 'Location' },
+    pickuplocation: { type: Schema.Types.ObjectId, ref: 'Location' },
+     deliverylocation: { type: Schema.Types.ObjectId, ref: 'Location' },
     deliveryTime: { type: Date },
     pickupTime: { type: Date },
     createdAt: { type: Date, default: Date.now },

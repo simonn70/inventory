@@ -9,17 +9,22 @@ import Product from '../database/models/models.product';
 const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 
 export const createOrder = async (req: any, res: Response) => {
-    const { products, paymentMethod, locationCategory, deliveryTime, pickupTime } = req.body;
+    const { products, paymentMethod, pickuplocationCategory,deliverylocationCategory, deliveryTime, pickupTime } = req.body;
     const customer = req.user;
 
     try {
         await connectToDatabase();
 
         // Find the location by locationCategory
-        const location = await Location.findOne({ category: locationCategory });
+        const location1 = await Location.findOne({ category: pickuplocationCategory });
         if (!location) {
-            return res.status(404).send({ msg: `Location with category '${locationCategory}' not found` });
+            return res.status(404).send({ msg: `Location with category '${pickuplocationCategory}' not found` });
         }
+         const location2 = await Location.findOne({ category: deliverylocationCategory });
+        if (!location) {
+            return res.status(404).send({ msg: `Location with category '${deliverylocationCategory}' not found` });
+        }
+
 
         // Calculate the total amount for the order and populate service in products
         let totalAmount: number = 0;
@@ -45,7 +50,8 @@ export const createOrder = async (req: any, res: Response) => {
             products: populatedProducts,
             totalAmount,
             paymentMethod,
-            location: location._id,
+            pickuplocation: location1._id,
+            deliverylocation: location2._id,
             deliveryTime,
             pickupTime,
         });

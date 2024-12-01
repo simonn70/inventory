@@ -95,7 +95,7 @@ export const createOrder = async (req: any, res: Response) => {
 export const getAllOrders = async (req: Request, res: Response) => {
     try {
         await connectToDatabase();
-        const orders = await Order.find();
+        const orders = await Order.find().populate("products.product");
         return res.status(200).send(orders);
     } catch (error) {
         return res.status(500).send({ msg: 'Error fetching orders', error });

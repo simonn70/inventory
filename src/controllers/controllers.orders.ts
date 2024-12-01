@@ -9,37 +9,54 @@ import Product from '../database/models/models.product';
 const PAYSTACK_SECRET_KEY = "sk_live_b656166f9c8b4216425d78a0ef4c49a390d84cbd";
 
 export const createOrder = async (req: any, res: Response) => {
-    const { products, paymentMethod, pickuplocationCategory,deliverylocationCategory, deliveryTime, pickupTime } = req.body;
+    const { products, paymentMethod, pickuplocationCategory, deliverylocationCategory, deliveryTime, pickupTime } = req.body;
     const customer = req.user;
 
     try {
+        if (!customer || !customer._id) {
+            return res.status(400).send({ msg: "User information is missing or invalid" });
+        }
+
         await connectToDatabase();
 
-        // Find the location by locationCategory
-        const location1 = await Location.findOne({ category: pickuplocationCategory });
-        if (!location) {
-            return res.status(404).send({ msg: `Location with category '${pickuplocationCategory}' not found` });
-        }
-         const location2 = await Location.findOne({ category: deliverylocationCategory });
-        if (!location) {
-            return res.status(404).send({ msg: `Location with category '${deliverylocationCategory}' not found` });
+        // Find pickup location
+        const location1 = await Location.findOne({
+            category: pickuplocationCategory,
+            user: customer._id, // Ensure the location belongs to the user
+        });
+
+        if (!location1) {
+            return res.status(404).send({ msg: `Pickup location with category '${pickuplocationCategory}' not found` });
         }
 
+        // Find delivery location
+        const location2 = await Location.findOne({
+            category: deliverylocationCategory,
+            user: customer._id, // Ensure the location belongs to the user
+        });
+
+        if (!location2) {
+            return res.status(404).send({ msg: `Delivery location with category '${deliverylocationCategory}' not found` });
+        }
 
         // Calculate the total amount for the order and populate service in products
         let totalAmount: number = 0;
         const populatedProducts = [];
-        
+
         for (const item of products) {
             const product = await Product.findById(item.product).populate('service');
             if (!product) {
                 return res.status(404).send({ msg: `Product with ID ${item.product} not found` });
             }
 
+            if (!product.service) {
+                return res.status(400).send({ msg: `Product service for product ID ${item.product} is missing` });
+            }
+
             totalAmount += product.price * item.quantity;
             populatedProducts.push({
                 product: product._id,
-                service: product.service.name,
+                service: product.service.name, // Ensure service has `name`
                 quantity: item.quantity,
             });
         }
@@ -64,37 +81,42 @@ export const createOrder = async (req: any, res: Response) => {
             // Proceed with Paystack payment
             const parseTotal = parseFloat(totalAmount.toFixed(2));
 
-            // Initialize Paystack payment
-            const paymentResponse = await axios.post('https://api.paystack.co/transaction/initialize', {
-                email: customer.email, // assuming customer object has an email field
-                amount: Math.round(parseTotal * 100), // amount in Kobo
-                metadata: {
-                    orderId: newOrder._id
+            const paymentResponse = await axios.post(
+                'https://api.paystack.co/transaction/initialize',
+                {
+                    email: customer.email, // Assuming customer object has an email field
+                    amount: Math.round(parseTotal * 100), // amount in Kobo
+                    metadata: {
+                        orderId: newOrder._id,
+                    },
+                    channels: ['card', 'mobile_money'],
                 },
-                channels: ["card", "mobile_money"],
-            }, {
-                headers: {
-                    Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`
+                {
+                    headers: {
+                        Authorization: `Bearer ${PAYSTACK_SECRET_KEY}`,
+                    },
                 }
-            });
+            );
 
             return res.status(201).send({
                 order: newOrder,
-                paymentUrl: paymentResponse.data.data.authorization_url
+                paymentUrl: paymentResponse.data.data.authorization_url,
             });
         } else if (paymentMethod === 'payOnDelivery') {
             // Skip payment processing for Pay on Delivery
             return res.status(201).send({
                 order: newOrder,
-                message: 'Order created successfully. Payment will be made on delivery.'
+                message: 'Order created successfully. Payment will be made on delivery.',
             });
         } else {
             return res.status(400).send({ msg: 'Invalid payment method' });
         }
     } catch (error) {
+        console.error('Error creating order:', error);
         return res.status(500).send({ msg: 'Error creating order', error });
     }
 };
+
 
 
 

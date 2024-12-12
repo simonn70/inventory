@@ -128,14 +128,15 @@ export const verifyAccount = async (request: Request, response: Response) => {
 
 
 export const login = async (request: Request, response: Response) => {
-    const { role, phone, password } = request.body;
+    const { role, email, password } = request.body;
     
     try {
         // Ensure the database is connected
         await connectToDatabase();
         
         // Find the user by email and role
-        const user = await User.findOne({ phone, role });
+        const user = await User.findOne({ email });
+     console.log(user)
         
         if (!user) {
             return response.status(401).send({ msg: "Invalid email or password" });
@@ -148,9 +149,9 @@ export const login = async (request: Request, response: Response) => {
             return response.status(401).send({ msg: "Invalid email or password" });
         }
         
-        if (!user.isVerified) {
-            return response.status(403).send({ msg: "Account not verified" });
-        }
+        // if (!user.isVerified) {
+        //     return response.status(403).send({ msg: "Account not verified" });
+        // }
         
         // Generate a token (assuming you're using JWT)
         const token = jwt.sign(
@@ -167,7 +168,7 @@ export const login = async (request: Request, response: Response) => {
                 name: user.name,
                 email: user.email,
                 role: user.role,
-                phone: user.phone,
+                
                 // Include any other user fields you want to return
             }
         });

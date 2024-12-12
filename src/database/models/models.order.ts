@@ -1,34 +1,24 @@
-import { Schema, Types, model, models } from "mongoose";
-
+import { Schema, model, models } from "mongoose";
+import crypto from "crypto"; // Import crypto for generating unique IDs
 
 const orderSchema = new Schema({
-    customer: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    partner: { type: Schema.Types.ObjectId, ref: 'User' },
-    products: [{
-        product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
-        quantity: { type: Number, required: true },
-        service: { type: String, required: true }
-    }],
-    totalAmount: { type: Number, required: true },
-    status: { 
-        type: String, 
-        enum: ['pending', 'confirmed', 'in-progress', 'completed', 'cancelled'],
-        default: 'pending'
+  orderId: {
+    type: String,
+    default: () => `ORD-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, // Generate unique order ID
+    unique: true,
+  },
+  userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
+  warehouse: { type: String, enum: ["TEMA"] },
+  products: [
+    {
+      productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
+      quantity: { type: Number, required: true },
     },
-    paymentStatus: { 
-        type: String, 
-        enum: ['unpaid', 'paid', 'failed'],
-        default: 'unpaid'
-    },
-    // payment: { type: Schema.Types.ObjectId, ref: 'Payment' },
-    pickuplocation: { type: Schema.Types.ObjectId, ref: 'Location' },
-     deliverylocation: { type: Schema.Types.ObjectId, ref: 'Location' },
-    deliveryTime: { type: Date },
-    pickupTime: { type: Date },
-    createdAt: { type: Date, default: Date.now },
-    updatedAt: { type: Date, default: Date.now },
+  ],
+  status: { type: String, enum: ["pending", "approved", "completed"], default: "pending" },
+  createdAt: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
-
-const Order = models.Order || model("Order", orderSchema)
-export default Order
+const Order = models.Order || model("Orderr", orderSchema);
+export default Order;

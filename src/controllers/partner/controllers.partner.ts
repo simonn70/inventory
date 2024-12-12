@@ -7,7 +7,7 @@
 import { Request, Response } from 'express';
 import User from '../../database/models/models.customer';
 import { connectToDatabase } from '../../database';
-import Service from '../../database/models/models.services';
+
 import Order from '../../database/models/models.order';
 
 // Get all partners
@@ -86,10 +86,7 @@ export const addServiceToPartner = async (req: Request, res: Response) => {
         await connectToDatabase();
 
         // Ensure the service exists
-        const service = await Service.findById(serviceId);
-        if (!service) {
-            return res.status(404).send({ msg: 'Service not found' });
-        }
+       
 
         // Find the partner and update their services field
         const updatedPartner = await User.findOneAndUpdate(

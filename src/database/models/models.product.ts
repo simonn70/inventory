@@ -1,6 +1,12 @@
 import { Schema, model, models } from "mongoose";
+import crypto from "crypto"; // Import crypto for generating unique IDs
 
 const ProductSchema = new Schema({
+  productId: {
+      type: String,
+      default: () => `PROD-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, // Generate unique order ID
+      unique: true,
+    },
   name: { type: String, required: true },
   itemCode: { type: String, required: true },
   itemDescription: { type: String, required: true },
@@ -10,20 +16,18 @@ const ProductSchema = new Schema({
     enum: ["high_voltage", "low_voltage"], // Add your categories here
     required: true,
   },
-   itemType: {
+  itemType: {
     type: String,
-    enum: ["cables", "Switchgear", "plugs", "cones", "SF6-GS","accessory","control","supply","protection"], // Add your categories here
+    enum: ["cables", "Switchgear", "plugs", "cones", "SF6-GS", "accessory", "control", "supply", "protection"], // Add your categories here
     required: true,
   },
-   warehouse: {
+  warehouse: {
     type: String,
     enum: ["TEMA", "WAREHOUSE_A"], // Add your categories here
     required: true,
   },
-  // warehouseId: { type: Schema.Types.ObjectId, ref: "Warehouse", required: true },
   quantity: { type: Number, default: 0 }, // Current stock
   reorderLevel: { type: Number, default: 10 }, // Minimum threshold
- // Indicates if the product is returnable
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });
@@ -33,5 +37,5 @@ ProductSchema.virtual("status").get(function () {
   return this.quantity > this.reorderLevel ? "inStock" : "lowStock";
 });
 
-const Product = models.product || model("", ProductSchema);
+const Product = models.Product || model("Product", ProductSchema);
 export default Product;

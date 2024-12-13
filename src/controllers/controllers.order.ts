@@ -73,7 +73,10 @@ export const approveOrder = async (req, res) => {
 
   try {
     const order = await Order.findOne({ orderId }).populate("products.productId");
-    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+    if (!order) {
+      console.log("Order not found with orderId:", orderId); // Log if order is not found
+      return res.status(404).json({ success: false, message: "Order not found" });
+    }
 
     if (order.status !== "pending") {
       return res.status(400).json({ success: false, message: "Order is not pending" });
@@ -83,9 +86,7 @@ export const approveOrder = async (req, res) => {
       for (const product of order.products) {
         const productDoc = await Product.findById(product.productId);
         if (productDoc.quantity < product.quantity) {
-          return res
-            .status(400)
-            .json({ success: false, message: `Insufficient stock for product: ${productDoc.name}` });
+          return res.status(400).json({ success: false, message: `Insufficient stock for product: ${productDoc.name}` });
         }
         productDoc.quantity -= product.quantity;
         await productDoc.save();
@@ -100,6 +101,30 @@ export const approveOrder = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+
+
+export const rejectOrder = async (req, res) => {
+  const { orderId } = req.params;
+
+  try {
+    const order = await Order.findOne({ orderId }).populate("products.productId");
+    if (!order) return res.status(404).json({ success: false, message: "Order not found" });
+
+    if (order.status !== "pending") {
+      return res.status(400).json({ success: false, message: "Order is not pending" });
+    }
+
+    // You can add any additional rejection logic here if needed
+    order.status = "rejected";
+    await order.save();
+    return res.status(200).json({ success: true, message: "Order has been rejected", order });
+  } catch (error) {
+    console.error("Error rejecting order:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 
 
 export const returnProducts = async (req, res) => {

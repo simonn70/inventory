@@ -5,13 +5,14 @@ import {
     updateProduct,
     
 } from '../controllers/controllers.product';
-import { approveOrder, createOrder, fetchOrdersByUserId, fetchPendingOrders } from '../controllers/controllers.order';
+import { approveOrder, rejectOrder, createOrder, fetchOrdersByUserId, fetchPendingOrders } from '../controllers/controllers.order';
 
 const router = express.Router();
 
 // Route to create a new product
 router.post('/create', createOrder);
 router.post('/approve/:orderId', approveOrder);
+router.post('/reject/:orderId', rejectOrder);
 router.get('/', fetchPendingOrders);
 router.get('/:userId', fetchOrdersByUserId);
 router.delete('/:orderId', updateProduct);

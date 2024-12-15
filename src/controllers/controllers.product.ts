@@ -64,6 +64,66 @@ export const createProduct = async (req, res) => {
 };
 
 
+ // Import your Product model
+ // Adjust import based on your setup
+
+export const bulkUploadProducts = async (req, res) => {
+  try {
+    const products  = req.body; // CSV data extracted and sent in the request body
+
+    // Array to track successfully uploaded products
+    const uploadedProducts = [];
+    const errors = [];
+
+    for (const product of products) {
+      try {
+        // Validate required fields for each product
+        if (
+          !product.name ||
+          !product.itemCode ||
+          !product.itemDescription ||
+          !product.project ||
+          !product.category ||
+          !product.itemType ||
+          !product.warehouse ||
+          product.quantity === undefined ||
+          product.reorderLevel === undefined
+        ) {
+          errors.push({ product, error: "Missing required fields" });
+          continue; // Skip this product
+        }
+
+        // Transform product (add timestamps, normalize values, etc.)
+        const newProduct = {
+          ...product,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+
+        // Insert into the database
+        const savedProduct = await Product.create(newProduct); // Save one by one
+        uploadedProducts.push(savedProduct); // Track successful uploads
+      } catch (error) {
+        // Handle errors for individual products
+        errors.push({ product, error: error.message });
+      }
+    }
+
+    // Return results
+    res.status(201).json({
+      success: true,
+      message: `${uploadedProducts.length} products uploaded successfully.`,
+      errors: errors.length > 0 ? errors : null, // Include errors if any
+    });
+  } catch (error) {
+    console.error("Error during bulk product upload:", error);
+    res.status(500).json({
+      success: false,
+      message: "An error occurred during product upload. Please try again.",
+    });
+  }
+};
+
 // Get all products
 export const getProducts = async (req, res) => {
   try {

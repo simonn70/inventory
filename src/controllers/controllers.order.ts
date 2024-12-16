@@ -65,14 +65,17 @@ export const createOrder = async (req, res) => {
 
     // Fetch all users with the admin role
     const adminUsers = await User.find({ role: "admin" });
+    console.log(adminUsers);
+    
 
     // Notify each admin via email
     const emailPromises = adminUsers.map((admin) => {
       const subject = "New Order Created";
       const orderDetailsUrl = `https://imsystems.vercel.app/admin/orders`; // Add this to .env
       const emailBody = orderDetailsUrl;
-      return sendEmail(subject, emailBody, admin.email);
+      return  sendEmail(subject, emailBody, admin.email);
     });
+console.log(emailPromises,"promises");
 
     // Wait for all emails to be sent
     await Promise.all(emailPromises);

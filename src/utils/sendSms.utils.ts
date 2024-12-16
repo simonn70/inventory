@@ -32,15 +32,13 @@ export async function sendEmail(subject: string, body: string, toEmail: string) 
         <h1 style="color: #63b3ed; font-size: 24px;">AIHCL</h1>
       </header>
       <main>
-        // <p style="color: #cbd5e0;">
-        //   We received a request to reset your password. Please click the button below to reset your password:
-        // </p>
+        <p style="color: #cbd5e0;">
+          Hello Admin , items have been ordered from the warehouse and needs your approval 
+        </p>
         <div style="text-align: center; margin: 20px 0;">
           <a href="${body}" style="display: inline-block; padding: 10px 20px; background-color: #63b3ed; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px;">Visit Site</a>
         </div>
-        // <p style="color: #cbd5e0;">
-        //   If you did not request this change, please ignore this email or contact our support if you have concerns.
-        // </p>
+        
         <p style="color: #cbd5e0;">Best regards,</p>
         <p style="font-size: 16px; color: #cbd5e0;"><strong>The AIHCL Team</strong></p>
       </main>

@@ -7,17 +7,17 @@ dotenv.config({ path: path.resolve(process.cwd(), ".env") });
 
 // Define SMTP configurations using environment variables
 const SMTP_SERVER = "smtp.gmail.com";
-const SMTP_PORT = 587; // Port for STARTTLS
+const SMTP_PORT = 465; // Port for STARTTLS
 const SMTP_USERNAME = process.env.SMTP_USERNAME || "aihcl98@gmail.com";
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "fyov rxcq udsf aaat";
-const SMTP_FROM = process.env.SMTP_FROM || "AIHCL <aihcl98@gmail.com>";
+const SMTP_FROM = process.env.SMTP_FROM || "AIHCL<aihcl98@gmail.com>";
 
 export async function sendEmail(subject: string, body: string, toEmail: string) {
     // Create a transporter object
     const transporter = nodemailer.createTransport({
         host: SMTP_SERVER,
         port: SMTP_PORT,
-        secure: false, // Use STARTTLS for port 587
+        secure: true, // Use STARTTLS for port 587
         auth: {
             user: SMTP_USERNAME,
             pass: SMTP_PASSWORD,
@@ -36,7 +36,7 @@ export async function sendEmail(subject: string, body: string, toEmail: string) 
         //   We received a request to reset your password. Please click the button below to reset your password:
         // </p>
         <div style="text-align: center; margin: 20px 0;">
-          <a href="${body}" style="display: inline-block; padding: 10px 20px; background-color: #63b3ed; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px;">Reset Your Password</a>
+          <a href="${body}" style="display: inline-block; padding: 10px 20px; background-color: #63b3ed; color: #ffffff; text-decoration: none; border-radius: 6px; font-size: 16px;">Visit Site</a>
         </div>
         // <p style="color: #cbd5e0;">
         //   If you did not request this change, please ignore this email or contact our support if you have concerns.

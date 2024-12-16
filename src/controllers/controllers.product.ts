@@ -85,9 +85,8 @@ export const bulkUploadProducts = async (req, res) => {
           !product.project ||
           !product.category ||
           !product.itemType ||
-          !product.warehouse ||
-          product.quantity === undefined ||
-          product.reorderLevel === undefined
+          !product.warehouse
+          
         ) {
           errors.push({ product, error: "Missing required fields" });
           continue; // Skip this product

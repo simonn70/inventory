@@ -7,7 +7,7 @@ import { connectToDatabase } from "../database";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken"; // Assuming you're using JWT for authentication
 import User from "../database/models/models.customer";
-import { sendSMS } from "../utils/sendSms.utils";
+// import { sendSMS } from "../utils/sendSms.utils";
 
 
 export const register = async (request: Request, response: Response) => {
@@ -58,7 +58,7 @@ export const register = async (request: Request, response: Response) => {
         const message = ` Hello  ${name} your verification code is  ${verificationCode} kindly enter to verify your account`
         const number= '0541902075'
 
-        await sendSMS(message,phone)
+        // await sendSMS(message,phone)
 
         // Send verification email (commented out, assuming you will use it)
         // const transporter = nodemailer.createTransport({
@@ -287,7 +287,7 @@ export const sendPasswordResetEmail = async (request: Request, response: Respons
         const message =   `You are receiving this because you (or someone else) have requested to reset your password.\n\n
            Kindly verify using this code: ${verificationCode}\n\n
             If you did not request this, please ignore this message and your password will remain unchanged.\n`
-      await  sendSMS(message,phone)
+    //   await  sendSMS(message,phone)
 
         return response.status(200).send({ msg: "Password reset sms sent" });
 

@@ -7,6 +7,10 @@ import Product from "../database/models/models.product";
 
 // Import Product model
 
+import User from "../database/models/models.customer"; // Adjust the path to your User model
+ // Adjust the path to your Product model
+import { sendEmail } from "../utils/sendSms.utils"; // Adjust the path to your sendEmail function
+
 export const createOrder = async (req, res) => {
   const { userId, warehouse, products } = req.body;
 
@@ -19,7 +23,9 @@ export const createOrder = async (req, res) => {
     // Validate warehouse
     const validWarehouses = ["TEMA"];
     if (!validWarehouses.includes(warehouse)) {
-      return res.status(400).json({ success: false, message: `Invalid warehouse. Must be one of: ${validWarehouses.join(", ")}` });
+      return res
+        .status(400)
+        .json({ success: false, message: `Invalid warehouse. Must be one of: ${validWarehouses.join(", ")}` });
     }
 
     // Validate products
@@ -40,7 +46,9 @@ export const createOrder = async (req, res) => {
       // Check if the product exists in the database
       const existingProduct = await Product.findById(product.productId);
       if (!existingProduct) {
-        return res.status(400).json({ success: false, message: `Product with ID ${product.productId} does not exist.` });
+        return res
+          .status(400)
+          .json({ success: false, message: `Product with ID ${product.productId} does not exist.` });
       }
     }
 
@@ -55,6 +63,20 @@ export const createOrder = async (req, res) => {
     // Save the order to the database
     const savedOrder = await order.save();
 
+    // Fetch all users with the admin role
+    const adminUsers = await User.find({ role: "admin" });
+
+    // Notify each admin via email
+    const emailPromises = adminUsers.map((admin) => {
+      const subject = "New Order Created";
+      const orderDetailsUrl = `https://imsystems.vercel.app/admin/orders`; // Add this to .env
+      const emailBody = orderDetailsUrl;
+      return sendEmail(subject, emailBody, admin.email);
+    });
+
+    // Wait for all emails to be sent
+    await Promise.all(emailPromises);
+
     // Send success response
     return res.status(201).json({ success: true, order: savedOrder });
   } catch (error) {
@@ -68,39 +90,64 @@ export const createOrder = async (req, res) => {
 };
 
 
+
+ // Adjust path to your Order model
+
 export const approveOrder = async (req, res) => {
   const { orderId } = req.params;
 
   try {
-    const order = await Order.findOne({ orderId }).populate("products.productId");
+    // Find the order by orderId and populate userId and product details
+    const order = await Order.findOne({ orderId })
+      .populate("products.productId")
+      .populate("userId");
+
+    // Check if the order exists
     if (!order) {
       console.log("Order not found with orderId:", orderId); // Log if order is not found
       return res.status(404).json({ success: false, message: "Order not found" });
     }
 
+    // Check if the order is pending
     if (order.status !== "pending") {
       return res.status(400).json({ success: false, message: "Order is not pending" });
     }
 
-    if (order) {
-      for (const product of order.products) {
-        const productDoc = await Product.findById(product.productId);
-        if (productDoc.quantity < product.quantity) {
-          return res.status(400).json({ success: false, message: `Insufficient stock for product: ${productDoc.name}` });
-        }
-        productDoc.quantity -= product.quantity;
-        await productDoc.save();
+    // Check and update product quantities
+    for (const product of order.products) {
+      const productDoc = await Product.findById(product.productId);
+      if (productDoc.quantity < product.quantity) {
+        return res
+          .status(400)
+          .json({ success: false, message: `Insufficient stock for product: ${productDoc.name}` });
       }
+      productDoc.quantity -= product.quantity;
+      await productDoc.save();
     }
 
+    // Update the order status to approved
     order.status = "approved";
     await order.save();
+
+    // Send email notification to the user
+    const userEmail = order.userId.email; // Get user's email
+    const subject = "Your Order Has Been Approved";
+    const orderDetailsUrl = `https://imsystems.vercel.app/signin`; // Add this to your .env
+    const emailBody = `
+      Your order has been approved! You can view the details by clicking the button below:
+      ${orderDetailsUrl}
+    `;
+
+    await sendEmail(subject, orderDetailsUrl, userEmail);
+
+    // Send success response
     return res.status(200).json({ success: true, order });
   } catch (error) {
     console.error("Error approving order:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 
 

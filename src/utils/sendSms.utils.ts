@@ -10,7 +10,7 @@ const SMTP_SERVER = "smtp.gmail.com";
 const SMTP_PORT = 587; // Port for STARTTLS
 const SMTP_USERNAME = process.env.SMTP_USERNAME || "aihcl98@gmail.com";
 const SMTP_PASSWORD = process.env.SMTP_PASSWORD || "fyov rxcq udsf aaat";
-const SMTP_FROM = process.env.SMTP_FROM || "aihcl98@gmail.com";
+const SMTP_FROM = process.env.SMTP_FROM || "AIHCL <aihcl98@gmail.com>";
 
 export async function sendEmail(subject: string, body: string, toEmail: string) {
     // Create a transporter object

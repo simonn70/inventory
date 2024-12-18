@@ -8,7 +8,7 @@ const orderSchema = new Schema({
     unique: true,
   },
   userId: { type: Schema.Types.ObjectId, ref: "User", required: true },
-  warehouse: { type: String, enum: ["TEMA"] },
+  warehouse: { type: String },
   products: [
     {
       productId: { type: Schema.Types.ObjectId, ref: "Product", required: true },
@@ -16,7 +16,7 @@ const orderSchema = new Schema({
     },
   ],
   status: { type: String, enum: ["pending", "approved", "completed", "rejected"], default: "pending" },
-  createdAt: { type: Date, default: Date.now },
+  createdAt: { type: Date },
   updatedAt: { type: Date, default: Date.now },
 });
 

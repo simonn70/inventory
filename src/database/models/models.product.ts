@@ -3,31 +3,35 @@ import crypto from "crypto"; // Import crypto for generating unique IDs
 
 const ProductSchema = new Schema({
   productId: {
-      type: String,
-      default: () => `PROD-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, // Generate unique order ID
-      unique: true,
-    },
-  name: { type: String, required: true },
+    type: String,
+    default: () => `PROD-${crypto.randomBytes(4).toString("hex").toUpperCase()}`, // Generate unique product ID
+    unique: true,
+  },
+  name: { type: String},
   itemCode: { type: String, required: true },
   itemDescription: { type: String, required: true },
   project: { type: String, required: true },
   category: {
     type: String,
-    enum: ["high_voltage", "low_voltage"], // Add your categories here
-    required: true,
+    enum: ["high_voltage", "low_voltage"], // Add categories here 
   },
-  itemType: {
+  productType: {
     type: String,
-    enum: ["cables", "Switchgear", "plugs", "cones", "SF6-GS", "accessory", "control", "supply", "protection"], // Add your categories here
-    required: true,
   },
   warehouse: {
-    type: String,
-    enum: ["TEMA", "WAREHOUSE_A"], // Add your categories here
-    required: true,
+    type: String, 
   },
   quantity: { type: Number, default: 0 }, // Current stock
-  reorderLevel: { type: Number, default: 10 }, // Minimum threshold
+  reorderLevel: { type: Number, default: 0 }, // Minimum threshold for stock
+  av_quantity: { type: Number, default: 0 }, // Available quantity
+  variance: { type: Number, default: 0 },
+  depreciation : { type: Number, default: 0 },
+  bay: { type: String, default: '' }, // Bay location
+  contents: { type: String, default: '' }, // Description of product contents
+  totalCost: { type: Number, default: 0 }, // Total cost of products
+  unitCost: { type: Number, default: 0 }, // Cost per unit
+  totalTaken: { type: Number, default: 0 }, // Total quantity taken
+  unit: { type: String,  }, // Unit of measurement
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

@@ -20,20 +20,12 @@ export const createOrder = async (req, res) => {
       return res.status(400).json({ success: false, message: "User ID is required." });
     }
 
-    // Validate warehouse
-    const validWarehouses = ["TEMA"];
-    if (!validWarehouses.includes(warehouse)) {
-      return res
-        .status(400)
-        .json({ success: false, message: `Invalid warehouse. Must be one of: ${validWarehouses.join(", ")}` });
-    }
-
     // Validate products
     if (!Array.isArray(products) || products.length === 0) {
       return res.status(400).json({ success: false, message: "Products must be a non-empty array." });
     }
 
-    // Check if each product exists in the product database
+    // Check if each product exists in the product database and reduce stock
     for (const product of products) {
       if (!product.productId || !product.quantity) {
         return res.status(400).json({ success: false, message: "Each product must have a productId and quantity." });
@@ -50,6 +42,17 @@ export const createOrder = async (req, res) => {
           .status(400)
           .json({ success: false, message: `Product with ID ${product.productId} does not exist.` });
       }
+
+      // Check if there is enough stock available
+      if (existingProduct.av_quantity < product.quantity) {
+        return res
+          .status(400)
+          .json({ success: false, message: `Insufficient stock for product ID ${product.productId}.` });
+      }
+
+      // Reduce the available quantity of the product
+      // existingProduct.av_quantity -= product.quantity;
+      // await existingProduct.save();
     }
 
     // Create new order
@@ -57,6 +60,7 @@ export const createOrder = async (req, res) => {
       userId,
       warehouse,
       products,
+      createdAt: Date.now(),
       status: "pending", // Default to pending status
     });
 
@@ -65,17 +69,14 @@ export const createOrder = async (req, res) => {
 
     // Fetch all users with the admin role
     const adminUsers = await User.find({ role: "admin" });
-    console.log(adminUsers);
-    
 
     // Notify each admin via email
     const emailPromises = adminUsers.map((admin) => {
       const subject = "New Order Created";
       const orderDetailsUrl = `https://imsystems.vercel.app/admin/orders`; // Add this to .env
       const emailBody = orderDetailsUrl;
-      return  sendEmail(subject, emailBody, admin.email);
+      return sendEmail(subject, emailBody, admin.email);
     });
-console.log(emailPromises,"promises");
 
     // Wait for all emails to be sent
     await Promise.all(emailPromises);
@@ -91,6 +92,69 @@ console.log(emailPromises,"promises");
     });
   }
 };
+
+// Adjust the path to your Order model
+
+export const trackOrdersByMonth = async (req, res) => {
+  try {
+    // Aggregate orders by month
+    const ordersByMonth = await Order.aggregate([
+      {
+        $group: {
+          _id: {
+            year: { $year: "$createdAt" },
+            month: { $month: "$createdAt" },
+          },
+          count: { $sum: 1 }, // Count the number of orders
+          orders: { $push: "$$ROOT" }, // Include all order details
+        },
+      },
+      {
+        $sort: { "_id.year": 1, "_id.month": 1 }, // Sort by year and month
+      },
+      {
+        $project: {
+          _id: 0,
+          month: "$_id.month",
+          year: "$_id.year",
+          count: 1,
+          orders: 1,
+        },
+      },
+    ]);
+
+    // Map months to names for better readability
+    const months = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    // Add month names to the result
+    const formattedData = ordersByMonth.map((entry) => ({
+      month: months[entry.month - 1],
+      year: entry.year,
+      count: entry.count,
+      orders: entry.orders,
+    }));
+
+    // Return the aggregated data
+    res.status(200).json(formattedData);
+  } catch (error) {
+    console.error("Error tracking orders by month:", error);
+    res.status(500).json({ error: "Failed to track orders by month." });
+  }
+};
+
 
 
 
@@ -124,7 +188,7 @@ export const approveOrder = async (req, res) => {
           .status(400)
           .json({ success: false, message: `Insufficient stock for product: ${productDoc.name}` });
       }
-      productDoc.quantity -= product.quantity;
+      productDoc.av_quantity -= product.quantity;
       await productDoc.save();
     }
 

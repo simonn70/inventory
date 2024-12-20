@@ -1,7 +1,7 @@
 import mongoose from "mongoose"
 import "dotenv/config"
 
-const MONGODB_URI = "mongodb+srv://simonadjei70:QzlvSvnAxDMGaozU@cluster0.cgdpa.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+const MONGODB_URI = "mongodb+srv://simonadjei70:aihcl@cluster0.krtp1.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 declare global {
     var mongoose: {

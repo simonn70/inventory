@@ -189,6 +189,7 @@ export const approveOrder = async (req, res) => {
           .json({ success: false, message: `Insufficient stock for product: ${productDoc.name}` });
       }
       productDoc.av_quantity -= product.quantity;
+      product.totalCost = product.av_quantity * product.unitCost;
       await productDoc.save();
     }
 

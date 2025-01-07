@@ -24,7 +24,7 @@ export const createProduct = async (req, res) => {
       av_quantity, 
       bay, 
       contents, 
-      totalCost, 
+      
       unitCost, 
       totalTaken, 
       unit, 
@@ -54,9 +54,7 @@ export const createProduct = async (req, res) => {
       return res.status(400).json({ message: "Invalid av_quantity. Must be a non-negative number." });
     }
 
-    if (typeof totalCost !== 'number' || totalCost < 0) {
-      return res.status(400).json({ message: "Invalid totalCost. Must be a non-negative number." });
-    }
+   
 
     if (typeof unitCost !== 'number' || unitCost < 0) {
       return res.status(400).json({ message: "Invalid unitCost. Must be a non-negative number." });
@@ -84,7 +82,7 @@ export const createProduct = async (req, res) => {
       av_quantity,
       bay,
       contents,
-      totalCost,
+      totalCost:unitCost*av_quantity, 
       unitCost,
       totalTaken,
       unit,
